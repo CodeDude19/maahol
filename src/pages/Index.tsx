@@ -38,38 +38,34 @@ const Index = () => {
 
   return (
     <AudioProvider>
-      <div className="min-h-screen flex flex-col pb-20">
+      <div className="min-h-screen flex flex-col bg-black text-white">
         <motion.header
-          className="py-6 text-center glass-effect sticky top-0 z-10"
+          className="py-4 text-center bg-zinc-800/50 border-b border-white/10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-2xl sm:text-3xl font-medium tracking-tight">
-            <span className="wave-animation">
-              {Array.from("Serene Sounds").map((char, i) => (
-                <span key={i} style={{ "--i": i } as any}>{char === " " ? "\u00A0" : char}</span>
-              ))}
-            </span>
+          <h1 className="text-2xl font-medium tracking-tight flex items-center justify-center">
+            <span className="text-green-400 text-3xl mr-2">🌱</span> 
+            <span>Serene Sounds</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Create your perfect ambient soundscape</p>
         </motion.header>
 
-        <div className="flex justify-center my-4">
+        <div className="flex justify-center my-2">
           <div className="flex items-center space-x-2 overflow-x-auto pb-2 px-4 sm:px-0 no-scrollbar">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="glass-effect border-white/30 hover:bg-white/20">
+                <Button variant="outline" className="border-white/30 hover:bg-white/10 bg-zinc-800/50">
                   <SlidersHorizontal className="h-4 w-4 mr-2" />
                   {categories.find(c => c.id === selectedCategory)?.name || "All Sounds"}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="glass-effect border-white/30">
+              <DropdownMenuContent className="border-white/30 bg-zinc-800/90 backdrop-blur-lg">
                 {categories.map(category => (
                   <DropdownMenuItem 
                     key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
-                    className={selectedCategory === category.id ? "bg-primary/10" : ""}
+                    className={selectedCategory === category.id ? "bg-white/10" : ""}
                   >
                     {category.name}
                   </DropdownMenuItem>
@@ -79,7 +75,7 @@ const Index = () => {
           </div>
         </div>
         
-        <main className="flex-grow px-2 sm:px-4 mb-6">
+        <main className="flex-grow px-2 sm:px-4 mb-6 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedCategory}
@@ -93,7 +89,7 @@ const Index = () => {
           </AnimatePresence>
         </main>
         
-        <footer className="fixed bottom-0 left-0 right-0 p-4 z-10">
+        <footer className="sticky bottom-0 left-0 right-0 z-10">
           <Dashboard />
         </footer>
       </div>

@@ -20,10 +20,11 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound, volume }) => {
   };
 
   return (
-    <div className="flex items-center space-x-4 p-2 glass-effect rounded-lg mb-2">
-      <div className="w-8 text-center">{sound.icon}</div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium truncate mb-1">{sound.name}</div>
+    <div className="flex items-center space-x-4">
+      <div className="text-white font-medium w-1/3 text-left truncate">
+        {sound.name}
+      </div>
+      <div className="flex-1">
         <Slider
           value={[localVolume]}
           min={0}
@@ -32,9 +33,6 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound, volume }) => {
           onValueChange={handleVolumeChange}
           className="w-full"
         />
-      </div>
-      <div className="text-xs font-mono w-8 text-center">
-        {Math.round(localVolume * 100)}%
       </div>
     </div>
   );

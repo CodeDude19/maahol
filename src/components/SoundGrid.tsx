@@ -28,7 +28,7 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
 
   return (
     <motion.div 
-      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 px-4 py-6"
+      className="grid grid-cols-3 gap-4 px-4 py-6"
       variants={container}
       initial="hidden"
       animate="show"
@@ -41,27 +41,20 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
             key={sound.id} 
             variants={item}
             onClick={() => toggleSound(sound)}
-            className={`sound-tile ${isActive ? "active" : ""}`}
+            className={`sound-tile ${isActive ? "active" : ""} aspect-square flex flex-col items-center justify-center`}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
+            style={{
+              backgroundColor: isActive ? 
+                sound.id === 'rain-windshield' ? 'rgb(6, 182, 212)' : 
+                sound.id === 'heavy-rain' ? 'rgb(139, 92, 246)' : 
+                sound.id === 'thunder-storm' ? 'rgb(59, 130, 246)' : 
+                'rgba(75, 85, 99, 0.6)' : 'rgba(75, 85, 99, 0.6)'
+            }}
           >
             <div className="text-center">
-              <div className="text-3xl mb-2">{sound.icon}</div>
-              <h3 className="font-medium text-sm">{sound.name}</h3>
-              
-              {isActive && (
-                <div className="flex justify-center mt-2 space-x-0.5">
-                  {[...Array(3)].map((_, i) => (
-                    <div 
-                      key={i} 
-                      className="w-1 h-3 bg-primary rounded-full wave-animation"
-                      style={{ "--i": i } as any}
-                    >
-                      <span></span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="text-4xl mb-3">{sound.icon}</div>
+              <h3 className="font-medium text-white">{sound.name}</h3>
             </div>
           </motion.div>
         );

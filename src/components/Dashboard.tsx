@@ -3,10 +3,10 @@ import React from "react";
 import { useAudio } from "@/contexts/AudioContext";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2 } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import TimerSelector from "./TimerSelector";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const Dashboard: React.FC = () => {
   const { 
@@ -19,50 +19,14 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="glass-effect rounded-2xl p-4 sm:p-6 max-w-md mx-auto"
+      className="bg-black/60 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 sm:p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-medium">Now Playing</h2>
-        <Button 
-          className="rounded-full w-12 h-12 flex items-center justify-center glass-effect border-white/30 hover:bg-white/20"
-          variant="outline"
-          onClick={togglePlayPause}
-        >
-          {isPlaying ? 
-            <Pause className="h-5 w-5" /> : 
-            <Play className="h-5 w-5 ml-0.5" />
-          }
-        </Button>
-      </div>
-
-      <div className="mb-6">
-        <div className="flex items-center mb-2">
-          <Volume2 className="h-4 w-4 mr-2" />
-          <span className="text-sm">Master Volume</span>
-          <span className="ml-auto text-xs font-mono">
-            {Math.round(masterVolume * 100)}%
-          </span>
-        </div>
-        <Slider 
-          value={[masterVolume]} 
-          min={0} 
-          max={1} 
-          step={0.01}
-          onValueChange={(values) => setMasterVolume(values[0])}
-        />
-      </div>
-
-      <AnimatePresence>
+      <div className="max-w-md mx-auto">
         {activeSounds.length > 0 ? (
-          <motion.div 
-            className="space-y-2"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
+          <div className="space-y-4">
             {activeSounds.map(({ sound, volume }) => (
               <VolumeSlider 
                 key={sound.id} 
@@ -70,20 +34,26 @@ const Dashboard: React.FC = () => {
                 volume={volume}
               />
             ))}
-          </motion.div>
+          </div>
         ) : (
-          <motion.div 
-            className="text-center py-6 text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <div className="text-center py-4 text-white/60">
             No sounds selected. Choose sounds from the grid above.
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
 
-      <TimerSelector />
+        <div className="flex items-center justify-between mt-6">
+          <TimerSelector />
+          <Button 
+            className="rounded-full w-16 h-16 flex items-center justify-center bg-white text-black shadow-lg hover:bg-white/90"
+            onClick={togglePlayPause}
+          >
+            {isPlaying ? 
+              <Pause className="h-8 w-8" /> : 
+              <Play className="h-8 w-8 ml-1" />
+            }
+          </Button>
+        </div>
+      </div>
     </motion.div>
   );
 };
