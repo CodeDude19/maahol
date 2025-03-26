@@ -63,26 +63,26 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
             key={sound.id} 
             variants={item}
             onClick={() => toggleSound(sound)}
-            className="relative aspect-square flex flex-col items-center justify-center rounded-lg"
+            className="relative aspect-square flex flex-col items-center justify-center rounded-lg overflow-hidden"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{
-              backgroundColor: 'rgba(30, 30, 30, 0.8)',
-              boxShadow: isActive ? `0 0 15px ${neonColor}, 0 0 30px ${neonColor}70` : 'none',
+              backgroundColor: isActive ? `${neonColor}20` : 'rgba(30, 30, 30, 0.8)',
+              boxShadow: isActive ? `0 0 20px ${neonColor}, 0 0 40px ${neonColor}70` : 'none',
               transition: 'box-shadow 0.3s ease, background-color 0.3s ease'
             }}
           >
-            <div 
-              className="absolute inset-0 rounded-lg" 
-              style={{
-                border: `2px solid ${neonColor}`, 
-                opacity: isActive ? 0.8 : 0.4,
-                transition: 'opacity 0.3s ease'
-              }}
-            />
-            <div className="text-center z-10">
-              <div className="text-4xl mb-3" style={{ color: neonColor }}>{sound.icon}</div>
-              <h3 className="font-medium text-white">{sound.name}</h3>
+            {isActive && (
+              <div 
+                className="absolute inset-0 neon-glow" 
+                style={{
+                  backgroundColor: `${neonColor}30`,
+                  backgroundImage: `radial-gradient(circle at center, ${neonColor}40 0%, ${neonColor}10 70%, transparent 100%)`,
+                }}
+              />
+            )}
+            <div className="text-center z-10 px-2">
+              <h3 className="font-medium text-white text-lg">{sound.name}</h3>
             </div>
           </motion.div>
         );

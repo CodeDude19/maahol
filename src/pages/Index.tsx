@@ -47,8 +47,7 @@ const Index = () => {
         >
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-medium tracking-tight flex items-center">
-              <span className="text-green-400 text-3xl mr-2">🌱</span> 
-              <span>Maahol</span>
+              <span className="text-green-400 mr-2">Maahol</span> 
             </h1>
             
             <DropdownMenu>
