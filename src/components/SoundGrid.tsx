@@ -26,6 +26,27 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
     show: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 20 } }
   };
 
+  // Define neon colors for different sound types
+  const getNeonColor = (soundId: string) => {
+    switch (true) {
+      case soundId.includes('rain'):
+        return '#00ffff'; // Cyan
+      case soundId.includes('thunder'):
+        return '#ff00ff'; // Magenta
+      case soundId.includes('forest'):
+        return '#39ff14'; // Neon green
+      case soundId.includes('wave'):
+      case soundId.includes('ocean'):
+        return '#4d4dff'; // Neon blue
+      case soundId.includes('fire'):
+        return '#ff3131'; // Neon red
+      case soundId.includes('wind'):
+        return '#dfff00'; // Neon yellow/lime
+      default:
+        return '#aa00ff'; // Neon purple as default
+    }
+  };
+
   return (
     <motion.div 
       className="grid grid-cols-3 gap-4 px-4 py-6"
@@ -35,25 +56,32 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
     >
       {sounds.map((sound) => {
         const isActive = activeSounds.some(as => as.sound.id === sound.id);
+        const neonColor = getNeonColor(sound.id);
         
         return (
           <motion.div 
             key={sound.id} 
             variants={item}
             onClick={() => toggleSound(sound)}
-            className={`sound-tile ${isActive ? "active" : ""} aspect-square flex flex-col items-center justify-center`}
+            className="relative aspect-square flex flex-col items-center justify-center rounded-lg"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{
-              backgroundColor: isActive ? 
-                sound.id === 'rain-windshield' ? 'rgb(6, 182, 212)' : 
-                sound.id === 'heavy-rain' ? 'rgb(139, 92, 246)' : 
-                sound.id === 'thunder-storm' ? 'rgb(59, 130, 246)' : 
-                'rgba(75, 85, 99, 0.6)' : 'rgba(75, 85, 99, 0.6)'
+              backgroundColor: 'rgba(30, 30, 30, 0.8)',
+              boxShadow: isActive ? `0 0 15px ${neonColor}, 0 0 30px ${neonColor}70` : 'none',
+              transition: 'box-shadow 0.3s ease, background-color 0.3s ease'
             }}
           >
-            <div className="text-center">
-              <div className="text-4xl mb-3">{sound.icon}</div>
+            <div 
+              className="absolute inset-0 rounded-lg" 
+              style={{
+                border: `2px solid ${neonColor}`, 
+                opacity: isActive ? 0.8 : 0.4,
+                transition: 'opacity 0.3s ease'
+              }}
+            />
+            <div className="text-center z-10">
+              <div className="text-4xl mb-3" style={{ color: neonColor }}>{sound.icon}</div>
               <h3 className="font-medium text-white">{sound.name}</h3>
             </div>
           </motion.div>

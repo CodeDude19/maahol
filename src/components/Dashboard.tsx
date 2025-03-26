@@ -2,7 +2,6 @@
 import React from "react";
 import { useAudio } from "@/contexts/AudioContext";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import TimerSelector from "./TimerSelector";
@@ -19,7 +18,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-black/60 backdrop-blur-lg border-t border-white/10 rounded-t-2xl p-4 sm:p-6"
+      className="bg-black/60 backdrop-blur-lg border-t border-white/10 p-4 sm:p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
@@ -44,12 +43,15 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between mt-6">
           <TimerSelector />
           <Button 
-            className="rounded-full w-16 h-16 flex items-center justify-center bg-white text-black shadow-lg hover:bg-white/90"
+            className="rounded-full w-16 h-16 flex items-center justify-center bg-black border border-white/20 shadow-lg hover:bg-white/10"
+            style={{
+              boxShadow: isPlaying ? "0 0 15px rgba(74, 222, 128, 0.7), 0 0 30px rgba(74, 222, 128, 0.4)" : "none"
+            }}
             onClick={togglePlayPause}
           >
             {isPlaying ? 
-              <Pause className="h-8 w-8" /> : 
-              <Play className="h-8 w-8 ml-1" />
+              <Pause className="h-8 w-8 text-green-400" /> : 
+              <Play className="h-8 w-8 ml-1 text-white" />
             }
           </Button>
         </div>

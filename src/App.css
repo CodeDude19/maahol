@@ -52,3 +52,29 @@
   height: 3px;
   background: rgb(74, 222, 128);
 }
+
+/* Neon glow effects */
+@keyframes neon-pulse {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
+}
+
+.neon-glow {
+  animation: neon-pulse 2s infinite;
+}
+
+/* Sticky header with glass effect */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

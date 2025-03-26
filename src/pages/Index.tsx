@@ -40,19 +40,17 @@ const Index = () => {
     <AudioProvider>
       <div className="min-h-screen flex flex-col bg-black text-white">
         <motion.header
-          className="py-4 text-center bg-zinc-800/50 border-b border-white/10"
+          className="sticky top-0 z-50 py-4 px-4 backdrop-blur-lg bg-black/60 border-b border-white/10"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-2xl font-medium tracking-tight flex items-center justify-center">
-            <span className="text-green-400 text-3xl mr-2">🌱</span> 
-            <span>Serene Sounds</span>
-          </h1>
-        </motion.header>
-
-        <div className="flex justify-center my-2">
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 px-4 sm:px-0 no-scrollbar">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-medium tracking-tight flex items-center">
+              <span className="text-green-400 text-3xl mr-2">🌱</span> 
+              <span>Maahol</span>
+            </h1>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="border-white/30 hover:bg-white/10 bg-zinc-800/50">
@@ -73,7 +71,7 @@ const Index = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
+        </motion.header>
         
         <main className="flex-grow px-2 sm:px-4 mb-6 overflow-y-auto">
           <AnimatePresence mode="wait">
