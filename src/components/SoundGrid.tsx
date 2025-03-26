@@ -3,6 +3,7 @@ import React from "react";
 import { Sound } from "@/data/sounds";
 import { useAudio } from "@/contexts/AudioContext";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SoundGridProps {
   sounds: Sound[];
@@ -10,6 +11,7 @@ interface SoundGridProps {
 
 const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
   const { activeSounds, toggleSound } = useAudio();
+  const isMobile = useIsMobile();
   
   const container = {
     hidden: { opacity: 0 },
@@ -49,10 +51,11 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
 
   return (
     <motion.div 
-      className="grid grid-cols-3 gap-4 px-4 py-6"
+      className={`grid gap-3 px-3 py-4 ${isMobile ? 'grid-cols-3' : 'grid-cols-4 md:grid-cols-5 lg:grid-cols-6'}`}
       variants={container}
       initial="hidden"
       animate="show"
+      style={!isMobile ? { maxWidth: '650px', margin: '0 auto' } : undefined}
     >
       {sounds.map((sound) => {
         const isActive = activeSounds.some(as => as.sound.id === sound.id);
@@ -69,7 +72,11 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
             style={{
               backgroundColor: isActive ? `${neonColor}20` : 'rgba(30, 30, 30, 0.8)',
               boxShadow: isActive ? `0 0 20px ${neonColor}, 0 0 40px ${neonColor}70` : 'none',
-              transition: 'box-shadow 0.3s ease, background-color 0.3s ease'
+              transition: 'box-shadow 0.3s ease, background-color 0.3s ease',
+              maxWidth: isMobile ? undefined : '100px',
+              maxHeight: isMobile ? undefined : '100px',
+              width: '100%',
+              height: '100%'
             }}
           >
             {isActive && (
@@ -81,8 +88,17 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
                 }}
               />
             )}
-            <div className="text-center z-10 px-2">
-              <h3 className="font-medium text-white text-lg">{sound.name}</h3>
+            <div className="text-center z-10 px-2 w-full">
+              <h3 
+                className={`font-medium text-white ${isMobile ? 'text-xs' : 'text-sm'} break-words`}
+                style={{ 
+                  fontWeight: isMobile ? 300 : 400,
+                  letterSpacing: isMobile ? '0.01em' : 'normal',
+                  lineHeight: '1.2'
+                }}
+              >
+                {sound.name}
+              </h3>
             </div>
           </motion.div>
         );
