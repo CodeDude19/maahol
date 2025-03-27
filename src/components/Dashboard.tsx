@@ -24,8 +24,8 @@ const Dashboard: React.FC = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Left column - Volume controls */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-5">
+          {/* Left column - Volume controls (expandable) */}
           <div className="space-y-3">
             {activeSounds.length > 0 ? (
               <div className="space-y-3">
@@ -44,8 +44,8 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           
-          {/* Right column - Controls */}
-          <div className="flex flex-col items-center justify-center space-y-4">
+          {/* Right column - Playback controls (fixed width) */}
+          <div className="flex flex-col items-center justify-center space-y-8 px-4 py-2">
             <Button 
               className="rounded-full w-14 h-14 flex items-center justify-center bg-black/80 border border-white/20 hover:bg-white/10"
               style={{
