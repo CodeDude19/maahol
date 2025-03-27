@@ -6,6 +6,7 @@ import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import TimerSelector from "./TimerSelector";
 import { motion } from "framer-motion";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard: React.FC = () => {
   const { 
@@ -15,6 +16,8 @@ const Dashboard: React.FC = () => {
     isPlaying, 
     togglePlayPause 
   } = useAudio();
+  
+  const isMobile = useIsMobile();
 
   return (
     <motion.div 
@@ -24,8 +27,8 @@ const Dashboard: React.FC = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr,auto] gap-5">
-          {/* Left column - Volume controls (expandable) */}
+        <div className="grid grid-cols-[70%_30%] gap-4">
+          {/* Left column - Volume controls (expandable - 70%) */}
           <div className="space-y-3">
             {activeSounds.length > 0 ? (
               <div className="space-y-3">
@@ -44,8 +47,8 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           
-          {/* Right column - Playback controls (fixed width) */}
-          <div className="flex flex-col items-center justify-center space-y-8 px-4 py-2">
+          {/* Right column - Playback controls (fixed width - 30%) */}
+          <div className="flex flex-col items-center justify-center space-y-8 px-2">
             <Button 
               className="rounded-full w-14 h-14 flex items-center justify-center bg-black/80 border border-white/20 hover:bg-white/10"
               style={{
