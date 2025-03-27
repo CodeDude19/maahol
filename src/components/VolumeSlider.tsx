@@ -20,20 +20,18 @@ const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound, volume }) => {
   };
 
   return (
-    <div className="flex items-center space-x-4">
-      <div className="text-white font-medium w-1/3 text-left truncate">
+    <div className="flex flex-col space-y-1 w-full">
+      <div className="text-white/80 font-medium text-sm text-left truncate">
         {sound.name}
       </div>
-      <div className="flex-1">
-        <Slider
-          value={[localVolume]}
-          min={0}
-          max={1}
-          step={0.01}
-          onValueChange={handleVolumeChange}
-          className="w-full"
-        />
-      </div>
+      <Slider
+        value={[localVolume]}
+        min={0}
+        max={1}
+        step={0.01}
+        onValueChange={handleVolumeChange}
+        className="w-full"
+      />
     </div>
   );
 };

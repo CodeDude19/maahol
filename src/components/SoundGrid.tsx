@@ -70,9 +70,9 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{
-              backgroundColor: isActive ? `${neonColor}20` : 'rgba(30, 30, 30, 0.8)',
-              boxShadow: isActive ? `0 0 20px ${neonColor}, 0 0 40px ${neonColor}70` : 'none',
-              transition: 'box-shadow 0.3s ease, background-color 0.3s ease',
+              backgroundColor: isActive ? `${neonColor}15` : 'rgba(30, 30, 30, 0.6)',
+              boxShadow: isActive ? `0 0 15px ${neonColor}30` : 'none',
+              transition: 'background-color 0.3s ease',
               maxWidth: isMobile ? undefined : '100px',
               maxHeight: isMobile ? undefined : '100px',
               width: '100%',
@@ -83,8 +83,8 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
               <div 
                 className="absolute inset-0 neon-glow" 
                 style={{
-                  backgroundColor: `${neonColor}30`,
-                  backgroundImage: `radial-gradient(circle at center, ${neonColor}40 0%, ${neonColor}10 70%, transparent 100%)`,
+                  backgroundColor: `${neonColor}08`,
+                  backgroundImage: `radial-gradient(circle at center, ${neonColor}20 0%, ${neonColor}05 70%, transparent 100%)`,
                 }}
               />
             )}
