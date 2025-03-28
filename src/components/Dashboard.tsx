@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Right column - Playback controls (fixed width - 30%) */}
-          <div className="flex flex-col items-center justify-between py-4 px-2">
+          <div className="flex flex-col items-center justify-between py-4 px-2 space-y-6">
             <Button 
               className="rounded-full w-14 h-14 flex items-center justify-center bg-white border border-white/20 hover:bg-white/90"
               style={{
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
             >
               {isPlaying ? 
                 <Pause className="h-7 w-7 text-green-400" /> : 
-                <Play className="h-7 w-7 text-black" />
+                <Play className="h-7 w-7 text-black fill-black" />
               }
             </Button>
             

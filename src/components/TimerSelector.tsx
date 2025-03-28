@@ -40,6 +40,7 @@ const TimerSelector: React.FC = () => {
         <Button 
           variant="outline" 
           className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90"
+          onClick={cancelTimer}
         >
           <Timer className="h-4 w-4" />
           <span className="font-mono">{formatTimeRemaining(timeRemaining)}</span>
