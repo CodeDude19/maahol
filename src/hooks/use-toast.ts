@@ -7,7 +7,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 2000 // Keeping this at 2000ms (2 seconds)
+const TOAST_REMOVE_DELAY = 1000 // Changed to 1000ms (1 second)
 
 type ToasterToast = ToastProps & {
   id: string
@@ -151,10 +151,10 @@ function toast({ ...props }: Toast) {
     
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
   
-  // Auto-dismiss toast after 2 seconds
+  // Auto-dismiss toast after 1 second
   setTimeout(() => {
     dismiss()
-  }, 2000)
+  }, 1000)
 
   dispatch({
     type: "ADD_TOAST",
