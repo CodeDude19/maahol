@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAudio } from "@/contexts/AudioContext";
 import { Timer, X } from "lucide-react";
+// Removed mobile hook import as we're maintaining desktop layout on all screens
 
 // Define our option type interface separately from the imported one
 interface TimerOptionItem {
@@ -33,13 +34,14 @@ const formatTimeRemaining = (ms: number): string => {
 
 const TimerSelector: React.FC = () => {
   const { timer, timeRemaining, setTimer, cancelTimer } = useAudio();
+  // Removed mobile check as we're maintaining desktop layout on all screens
 
   return (
     <div className="flex items-center justify-center">
       {timeRemaining !== null ? (
         <Button 
           variant="outline" 
-          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90"
+          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3"
           onClick={cancelTimer}
         >
           <Timer className="h-4 w-4" />
@@ -50,7 +52,7 @@ const TimerSelector: React.FC = () => {
           <PopoverTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90"
+              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3"
             >
               <Timer className="h-4 w-4" />
               <span>Timer</span>
