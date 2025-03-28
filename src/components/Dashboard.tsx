@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-white/30 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5"
+      className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5"
       style={{
         boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1)"
       }}
