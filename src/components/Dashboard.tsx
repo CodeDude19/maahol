@@ -21,7 +21,10 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-black/50 border-t border-white/10 p-4 sm:p-5"
+      className="bg-white/30 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5"
+      style={{
+        boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1)"
+      }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
