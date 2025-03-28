@@ -35,13 +35,13 @@ const TimerSelector: React.FC = () => {
   const { timer, timeRemaining, setTimer, cancelTimer } = useAudio();
 
   return (
-    <div className="flex items-center justify-center mt-4 mb-2">
+    <div className="flex items-center justify-center">
       {timeRemaining !== null ? (
         <Button 
           variant="outline" 
-          className="rounded-full flex items-center border-white/30 hover:bg-white/20 bg-white/10"
+          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90"
         >
-          <Timer className="h-4 w-4 mr-2" />
+          <Timer className="h-4 w-4" />
           <span className="font-mono">{formatTimeRemaining(timeRemaining)}</span>
         </Button>
       ) : (
@@ -49,9 +49,9 @@ const TimerSelector: React.FC = () => {
           <PopoverTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-full flex items-center border-white/30 hover:bg-white/20 bg-white/10"
+              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90"
             >
-              <Timer className="h-4 w-4 mr-2" />
+              <Timer className="h-4 w-4" />
               <span>Timer</span>
             </Button>
           </PopoverTrigger>

@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5"
+      className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5 mx-10 mb-10 rounded-[10px]"
       style={{
         boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1)"
       }}
@@ -51,9 +51,9 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Right column - Playback controls (fixed width - 30%) */}
-          <div className="flex flex-col items-center justify-center space-y-8 px-2">
+          <div className="flex flex-col items-center justify-between py-4 px-2">
             <Button 
-              className="rounded-full w-14 h-14 flex items-center justify-center bg-black/80 border border-white/20 hover:bg-white/10"
+              className="rounded-full w-14 h-14 flex items-center justify-center bg-white border border-white/20 hover:bg-white/90"
               style={{
                 boxShadow: isPlaying ? "0 0 10px rgba(74, 222, 128, 0.5)" : "none"
               }}
@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
             >
               {isPlaying ? 
                 <Pause className="h-7 w-7 text-green-400" /> : 
-                <Play className="h-7 w-7 ml-1 text-white" />
+                <Play className="h-7 w-7 text-black" />
               }
             </Button>
             
