@@ -44,7 +44,7 @@ const TimerSelector: React.FC = () => {
           className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
           onClick={cancelTimer}
         >
-          <span className="font-mono text-sm">{formatTimeRemaining(timeRemaining)}</span>
+          <span className="font-mono" style={{ fontSize: '0.8rem' }}>{formatTimeRemaining(timeRemaining)}</span>
           <Clock className="h-3.5 w-3.5 ml-1" />
         </Button>
       ) : (
@@ -54,7 +54,7 @@ const TimerSelector: React.FC = () => {
               variant="outline" 
               className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
             >
-              <span className="text-sm">Timer</span>
+              <span style={{ fontSize: '0.8rem' }}>Timer</span>
               <Clock className="h-3.5 w-3.5 ml-1" />
             </Button>
           </PopoverTrigger>
