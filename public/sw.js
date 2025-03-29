@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maahol-v2.101';
+const CACHE_NAME = 'maahol-v2.103';
 const urlsToCache = [
   '/serene-symphony-soundscapes/',
   '/serene-symphony-soundscapes/index.html',

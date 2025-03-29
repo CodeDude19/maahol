@@ -84,16 +84,38 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const savedState = localStorage.getItem('maahol_audio_state');
     if (savedState) {
-      const parsedState = JSON.parse(savedState);
-      // Set all sounds to paused initially when loading
-      const restoredState = Object.entries(parsedState).reduce((acc, [key, value]) => {
-        acc[key] = {
-          ...value as { volume: number; isPlaying: boolean },
-          isPlaying: false // Always start paused
-        };
-        return acc;
-      }, {} as AudioState);
-      setAudioState(restoredState);
+      try {
+        const parsedState = JSON.parse(savedState);
+        
+        // Set the audio state with saved volumes but mark all as not playing
+        const restoredState = Object.entries(parsedState).reduce((acc, [key, state]) => {
+          acc[key] = {
+            volume: (state as any).volume,
+            isPlaying: false // Always start paused
+          };
+          return acc;
+        }, {} as AudioState);
+        
+        setAudioState(restoredState);
+
+        // Add all previously active sounds to activeSounds but in paused state
+        Object.entries(parsedState).forEach(([soundId, state]) => {
+          const sound = sounds.find(s => s.id === soundId);
+          if (sound && (state as any).volume > 0) {
+            const audio = new Audio(sound.audioSrc);
+            audio.loop = true;
+            audio.volume = ((state as any).volume / 100) * masterVolume;
+            
+            setActiveSounds(prev => [...prev, {
+              sound,
+              audio,
+              volume: (state as any).volume / 100
+            }]);
+          }
+        });
+      } catch (error) {
+        console.error('Error restoring audio state:', error);
+      }
     }
   }, []);
 
@@ -135,6 +157,15 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       newActiveSounds.splice(existingIndex, 1);
       setActiveSounds(newActiveSounds);
       
+      // Update audio state to mark as not playing and remove from persistence
+      setAudioState(prev => {
+        const newState = { ...prev };
+        delete newState[sound.id]; // Remove the sound completely from state
+        // Save to localStorage
+        localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+        return newState;
+      });
+      
       // If removing the last sound, pause playback
       if (newActiveSounds.length === 0) {
         setIsPlaying(false);
@@ -153,18 +184,36 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
 
+      // Get the saved volume for this sound or use default
+      const savedState = audioState[sound.id];
+      const volume = savedState?.volume ? savedState.volume / 100 : 1;
+
       // Add the new sound
       const audio = new Audio(sound.audioSrc);
       audio.loop = true;
-      audio.volume = masterVolume;
+      audio.volume = volume * masterVolume;
       
       const newSound: ActiveSound = {
         sound,
         audio,
-        volume: 1
+        volume
       };
       
       setActiveSounds(prev => [...prev, newSound]);
+
+      // Update audio state to mark as playing and save to persistence
+      setAudioState(prev => {
+        const newState = {
+          ...prev,
+          [sound.id]: {
+            volume: volume * 100,
+            isPlaying: true
+          }
+        };
+        // Save to localStorage
+        localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+        return newState;
+      });
 
       // If this is the first sound or if already playing, play this new sound
       if (activeSounds.length === 0 || isPlaying) {
@@ -186,7 +235,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: `${sound.name} is now playing`,
       });
     }
-  }, [activeSounds, isPlaying, masterVolume]);
+  }, [activeSounds, isPlaying, masterVolume, audioState]);
 
   // Update volume for a specific sound
   const setVolumeForSound = useCallback((soundId: string, volume: number) => {
