@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const InstallPWA: React.FC = () => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -15,6 +17,19 @@ const InstallPWA: React.FC = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    // Listen for the appinstalled event to know when the PWA was installed
+    const handleAppInstalled = () => {
+      // Show a toast notification
+      toast({
+        title: "Installation Complete",
+        description: "Maahol is now available on your home screen!",
+      });
+      setShowInstallPrompt(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
+
     // Check if the app is already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setShowInstallPrompt(false);
@@ -22,8 +37,9 @@ const InstallPWA: React.FC = () => {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
-  }, []);
+  }, [toast]);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -33,6 +49,15 @@ const InstallPWA: React.FC = () => {
     
     if (outcome === 'accepted') {
       setShowInstallPrompt(false);
+      
+      // We'll show a toast immediately after user accepts installation
+      // (this is in addition to the appinstalled event, which might not fire on all browsers)
+      toast({
+        title: "Installing...",
+        description: "Look for Maahol on your home screen once installation completes!",
+      });
+      
+      setDeferredPrompt(null);
     }
   };
 
