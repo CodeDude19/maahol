@@ -13,6 +13,7 @@ interface TimerOptionItem {
 }
 
 const timerOptions: TimerOptionItem[] = [
+  { value: "30sec", label: "30 seconds" },
   { value: "15min", label: "15 minutes" },
   { value: "30min", label: "30 minutes" },
   { value: "45min", label: "45 minutes" },
