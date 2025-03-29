@@ -82,15 +82,6 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
           
           <p className="leading-relaxed">Welcome to Maahol (माहौल) - your personal sound sanctuary. Transform any space into your perfect environment with carefully crafted ambient soundscapes that help you focus, relax, or find your flow.</p>
           
-          <div className="space-y-2 mt-4">
-            <h3 className="font-medium text-lg">Pro Tips 💡</h3>
-            <ul className="space-y-2 text-white/85">
-              <li>Mix rain sounds with thunder for a cozy storm</li>
-              <li>Combine cafe ambience with light rain for focus</li>
-              <li>Use white noise with nature sounds for sleep</li>
-            </ul>
-          </div>
-
           {isFirstVisit && (
             <div className="space-y-2 mt-4">
               <h3 className="font-medium text-lg">Try My Favorite Mix ✨</h3>
