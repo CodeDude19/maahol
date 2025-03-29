@@ -43,7 +43,7 @@ const Index = () => {
           categories={categories}
         />
         
-        <main className="flex-grow px-2 sm:px-4 mb-6 pt-2 overflow-y-auto">
+        <main className="flex-grow px-2 sm:px-4 mb-6 mt-[2.5vh] overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedCategory}
