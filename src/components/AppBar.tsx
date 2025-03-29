@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAudio } from "@/contexts/AudioContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,18 @@ interface AppBarProps {
 const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, categories }) => {
   const { isPlaying } = useAudio();
   const [showInfo, setShowInfo] = React.useState(false);
+
+  useEffect(() => {
+    // Check if this is the first visit
+    const hasVisited = localStorage.getItem('maahol_has_visited');
+    if (!hasVisited) {
+      // Show the info dialog
+      setShowInfo(true);
+      // Mark as visited
+      localStorage.setItem('maahol_has_visited', 'true');
+    }
+  }, []);
+
   return (
     <>
       <motion.div 
@@ -52,32 +64,38 @@ const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, 
           </DialogHeader>
 
           
-          <div className="space-y-4 text-white/90">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">Best with Earphones</span> 🎧
+          <div className="space-y-3 text-white/90 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-base">Best with Earphones</span> 🎧
             </div>
             
-            <p>An App to create a माहौल or an environment in your sound space, to elevate you and get rid of surrounding noise & distraction.</p>
+            <p className="leading-relaxed">Welcome to Maahol (माहौल) - your personal sound sanctuary. Transform any space into your perfect environment with carefully crafted ambient soundscapes that help you focus, relax, or find your flow.</p>
             
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">How to Use</h3>
-              <p>Use it for Work, Sleep & Focus.</p>
-              <p>Mix 2-3 Different ambient sounds together to create that Magic</p>
+            <p className="leading-relaxed text-sm text-white/85">As someone who deeply values the power of ambient sounds, I built Maahol out of love for creating the perfect sonic atmosphere. Every sound has been carefully chosen and tested during my own deep work and meditation sessions. 🎵</p>
+            
+            <div className="space-y-1.5">
+              <h3 className="text-base font-medium">Perfect For:</h3>
+              <ul className="grid grid-cols-2 gap-1 text-sm">
+                <li>⚡️ Deep Work</li>
+                <li>🧘 Meditation</li>
+                <li>💤 Sleep</li>
+                <li>✨ Relaxation</li>
+              </ul>
             </div>
             
-            <div className="space-y-2">
-              <p><span className="font-medium">Personal Favourite:</span> Heavy Rain + Thunder + Brown Noise</p>
+            <div className="space-y-1">
+              <p><span className="font-medium">Pro Tip:</span> Try Heavy Rain + Thunder + Brown Noise for deep focus! 💫</p>
             </div>
             
-            <div className="space-y-2 pt-4 border-t border-white/20">
-              <p className="font-medium">Creator: Yasser Arafat</p>
+            <div className="pt-3 border-t border-white/20 space-y-1">
+              <p className="font-medium text-sm">Crafted with ❤️ by Yasser Arafat</p>
               <a 
                 href="https://www.linkedin.com/in/yasserarafat007/" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                className="text-emerald-400 hover:text-emerald-300 transition-colors text-sm"
               >
-                Reach me Here!
+                Connect with me
               </a>
             </div>
           </div>

@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Sound, sounds } from "@/data/sounds";
 import { toast } from "@/hooks/use-toast";
 
 export type TimerOption = 
+  | "5min"
   | "15min" 
   | "30min" 
   | "45min" 
@@ -195,6 +195,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Calculate minutes based on option
     let minutes = 0;
     switch (timerOption) {
+      case "5min": minutes = 5; break;
       case "15min": minutes = 15; break;
       case "30min": minutes = 30; break;
       case "45min": minutes = 45; break;

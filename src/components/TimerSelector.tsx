@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -13,7 +12,7 @@ interface TimerOptionItem {
 }
 
 const timerOptions: TimerOptionItem[] = [
-  { value: "30sec", label: "30 seconds" },
+  { value: "5min", label: "5 minutes" },
   { value: "15min", label: "15 minutes" },
   { value: "30min", label: "30 minutes" },
   { value: "45min", label: "45 minutes" },
