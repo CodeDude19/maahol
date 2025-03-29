@@ -43,7 +43,7 @@ const IndexContent = () => {
         categories={categories}
       />
       
-      <main className="flex-grow px-2 sm:px-4 mb-6 mt-[1vh] overflow-y-auto relative">
+      <main className="flex-grow px-2 sm:px-4 mb-6 pt-[68px] overflow-y-auto relative">
         <AnimatePresence>
           {activeSounds.length > 0 && (
             <motion.div 

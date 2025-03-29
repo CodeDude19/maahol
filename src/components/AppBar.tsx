@@ -26,14 +26,14 @@ const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, 
 
   return (
     <>
-      <div className="w-full px-4">
+      <div className="fixed top-0 left-0 right-0 z-50 w-full px-4 pt-2">
         <div className={`mx-auto ${!isMobile ? 'max-w-[650px]' : ''}`}>
           <motion.div 
-            className="sticky top-2 z-50 py-4 px-4 mt-2.5 rounded-[10px] backdrop-blur-lg bg-white/30 border border-white/20 cursor-pointer w-full"
+            className="py-4 px-4 rounded-[16px] backdrop-blur-lg bg-white/30 cursor-pointer w-full"
             onClick={() => setShowInfo(true)}
             style={{
               boxShadow: "0 8px 32px -8px rgba(255, 255, 255, 0.1), 0 0 20px 0px rgba(255, 255, 255, 0.15)",
-              '--appbar-height': '60px'
+              '--appbar-height': '68px'
             } as React.CSSProperties}
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
