@@ -8,12 +8,26 @@ export interface Sound {
   color: string;
 }
 
+// Helper function to determine correct audio format by browser
+const getAudioFormat = (): 'ogg' | 'mp3' => {
+  // Check if Safari or iOS
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+                  /iPad|iPhone|iPod/.test(navigator.userAgent);
+  return isSafari ? 'mp3' : 'ogg';
+};
+
+// Get the correct audio src based on browser
+const getAudioSrc = (soundName: string): string => {
+  const format = getAudioFormat();
+  return `/maahol/sounds/${soundName}.${format}`;
+};
+
 export const sounds: Sound[] = [
   {
     id: 'beach',
     name: 'Beach',
     description: 'Relaxing beach waves',
-    audioSrc: '/maahol/sounds/beach.ogg',
+    audioSrc: getAudioSrc('beach'),
     category: 'nature',
     iconPath: '/maahol/images/Beach-W.png',
     color: '#099FFF',
@@ -22,7 +36,7 @@ export const sounds: Sound[] = [
     id: 'birds',
     name: 'Birds',
     description: 'Birds chirping in nature',
-    audioSrc: '/maahol/sounds/birds.ogg',
+    audioSrc: getAudioSrc('birds'),
     category: 'nature',
     iconPath: '/maahol/images/Birds-W.png',
     color: '#4D7902',
@@ -31,7 +45,7 @@ export const sounds: Sound[] = [
     id: 'cafe',
     name: 'Cafe',
     description: 'Ambient cafe atmosphere',
-    audioSrc: '/maahol/sounds/cafe.ogg',
+    audioSrc: getAudioSrc('cafe'),
     category: 'ambience',
     iconPath: '/maahol/images/Cafe-W.png',
     color: '#E6FB04',
@@ -40,7 +54,7 @@ export const sounds: Sound[] = [
     id: 'campfire',
     name: 'Campfire',
     description: 'Crackling campfire sounds',
-    audioSrc: '/maahol/sounds/campfire.ogg',
+    audioSrc: getAudioSrc('campfire'),
     category: 'nature',
     iconPath: '/maahol/images/Campfire-W.png',
     color: '#FF6600',
@@ -49,7 +63,7 @@ export const sounds: Sound[] = [
     id: 'city',
     name: 'City',
     description: 'Urban city ambience',
-    audioSrc: '/maahol/sounds/city.ogg',
+    audioSrc: getAudioSrc('city'),
     category: 'ambience',
     iconPath: '/maahol/images/City-W.png',
     color: '#E1C699',
@@ -58,7 +72,7 @@ export const sounds: Sound[] = [
     id: 'fireplace',
     name: 'Fireplace',
     description: 'Cozy fireplace sounds',
-    audioSrc: '/maahol/sounds/fireplace.ogg',
+    audioSrc: getAudioSrc('fireplace'),
     category: 'nature',
     iconPath: '/maahol/images/Fireplace-W.png',
     color: '#FF0000',
@@ -67,7 +81,7 @@ export const sounds: Sound[] = [
     id: 'forest',
     name: 'Forest',
     description: 'Peaceful forest ambience',
-    audioSrc: '/maahol/sounds/forest.ogg',
+    audioSrc: getAudioSrc('forest'),
     category: 'nature',
     iconPath: '/maahol/images/Forest-W.png',
     color: '#33FF00',
@@ -76,7 +90,7 @@ export const sounds: Sound[] = [
     id: 'night',
     name: 'Night',
     description: 'Night crickets and ambience',
-    audioSrc: '/maahol/sounds/night-crickets.ogg',
+    audioSrc: getAudioSrc('night-crickets'),
     category: 'nature',
     iconPath: '/maahol/images/Night-W.png',
     color: '#1F51FF',
@@ -85,7 +99,7 @@ export const sounds: Sound[] = [
     id: 'white-noise',
     name: 'White\nNoise',
     description: 'White noise ambience',
-    audioSrc: '/maahol/sounds/white-noise.ogg',
+    audioSrc: getAudioSrc('white-noise'),
     category: 'ambience',
     iconPath: '/maahol/images/Noise-W.png',
     color: '#FFFFFF',
@@ -94,7 +108,7 @@ export const sounds: Sound[] = [
     id: 'brown-noise',
     name: 'Brown\nNoise',
     description: 'Brown noise ambience',
-    audioSrc: '/maahol/sounds/brown-noise.ogg',
+    audioSrc: getAudioSrc('brown-noise'),
     category: 'ambience',
     iconPath: '/maahol/images/Noise-W.png',
     color: '#A52A2A',
@@ -103,7 +117,7 @@ export const sounds: Sound[] = [
     id: 'pink-noise',
     name: 'Pink\nNoise',
     description: 'Pink noise ambience',
-    audioSrc: '/maahol/sounds/pink-noise.ogg',
+    audioSrc: getAudioSrc('pink-noise'),
     category: 'ambience',
     iconPath: '/maahol/images/Noise-W.png',
     color: '#cc0e74',
@@ -112,7 +126,7 @@ export const sounds: Sound[] = [
     id: 'rain',
     name: 'Rain',
     description: 'Gentle rainfall sounds',
-    audioSrc: '/maahol/sounds/rain.ogg',
+    audioSrc: getAudioSrc('rain'),
     category: 'rain',
     iconPath: '/maahol/images/Rain-W.png',
     color: '#0062FF',
@@ -121,7 +135,7 @@ export const sounds: Sound[] = [
     id: 'rain-camping',
     name: 'Rain\nCamping',
     description: 'Rain on camping tent',
-    audioSrc: '/maahol/sounds/rain-camping.ogg',
+    audioSrc: getAudioSrc('rain-camping'),
     category: 'rain',
     iconPath: '/maahol/images/Rain_Camping-W.png',
     color: '#008080',
@@ -130,7 +144,7 @@ export const sounds: Sound[] = [
     id: 'heavy-rain',
     name: 'Rain\nHeavy',
     description: 'Heavy rainfall sounds',
-    audioSrc: '/maahol/sounds/heavy-rain.ogg',
+    audioSrc: getAudioSrc('heavy-rain'),
     category: 'rain',
     iconPath: '/maahol/images/Rain_Heavy-W.png',
     color: '#7F00FF',
@@ -139,7 +153,7 @@ export const sounds: Sound[] = [
     id: 'rain-window',
     name: 'Rain\nWindshield',
     description: 'Rain on a Car Windshield',
-    audioSrc: '/maahol/sounds/rain-car.ogg',
+    audioSrc: getAudioSrc('rain-car'),
     category: 'rain',
     iconPath: '/maahol/images/Rain_Windshield-W.png',
     color: '#00FFFF',
@@ -148,7 +162,7 @@ export const sounds: Sound[] = [
     id: 'snow',
     name: 'Snow',
     description: 'Peaceful snow ambience',
-    audioSrc: '/maahol/sounds/snow.ogg',
+    audioSrc: getAudioSrc('snow'),
     category: 'nature',
     iconPath: '/maahol/images/Snow-W.png',
     color: '#E2E2E2',
@@ -157,7 +171,7 @@ export const sounds: Sound[] = [
     id: 'thunder',
     name: 'Thunder',
     description: 'Thunder and storm sounds',
-    audioSrc: '/maahol/sounds/thunder.ogg',
+    audioSrc: getAudioSrc('thunder'),
     category: 'thunder',
     iconPath: '/maahol/images/Thunder-W.png',
     color: '#3f7db2',
@@ -166,7 +180,7 @@ export const sounds: Sound[] = [
     id: 'train',
     name: 'Train',
     description: 'Train journey ambience',
-    audioSrc: '/maahol/sounds/train.ogg',
+    audioSrc: getAudioSrc('train'),
     category: 'ambience',
     iconPath: '/maahol/images/Train-W.png',
     color: '#FFFF00',
@@ -175,7 +189,7 @@ export const sounds: Sound[] = [
     id: 'wind',
     name: 'Wind',
     description: 'Wind blowing sounds',
-    audioSrc: '/maahol/sounds/wind.ogg',
+    audioSrc: getAudioSrc('wind'),
     category: 'nature',
     iconPath: '/maahol/images/Wind-W.png',
     color: '#00FF33',

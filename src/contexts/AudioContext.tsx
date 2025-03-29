@@ -220,54 +220,85 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const savedState = audioState[sound.id];
       const volume = savedState?.volume ? savedState.volume / 100 : 1;
 
-      // Add the new sound
-      const audio = new Audio(sound.audioSrc);
-      audio.loop = true;
-      audio.volume = volume * masterVolume;
-      
-      const newSound: ActiveSound = {
-        sound,
-        audio,
-        volume
-      };
-      
-      setActiveSounds(prev => [...prev, newSound]);
-
-      // Update audio state to mark as playing and save to persistence
-      setAudioState(prev => {
-        const newState = {
-          ...prev,
-          [sound.id]: {
-            volume: volume * 100,
-            isPlaying: true
-          }
+      // Safari-friendly audio handling
+      try {
+        // Initialize audio context if not already done
+        initializeAudioContext();
+        
+        const audio = new Audio(sound.audioSrc);
+        audio.loop = true;
+        audio.volume = volume * masterVolume;
+        
+        // For Safari: preload the audio
+        audio.preload = 'auto';
+        
+        const newSound: ActiveSound = {
+          sound,
+          audio,
+          volume
         };
-        // Save to localStorage
-        localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
-        return newState;
-      });
+        
+        setActiveSounds(prev => [...prev, newSound]);
 
-      // If this is the first sound or if already playing, play this new sound
-      if (activeSounds.length === 0 || isPlaying) {
-        audio.play().catch(e => {
-          console.error("Failed to play audio:", e);
-          toast({
-            title: "Playback Failed",
-            description: "Could not play the audio. Please try again.",
-            variant: "destructive"
-          });
+        // Update audio state to mark as playing and save to persistence
+        setAudioState(prev => {
+          const newState = {
+            ...prev,
+            [sound.id]: {
+              volume: volume * 100,
+              isPlaying: true
+            }
+          };
+          // Save to localStorage
+          localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+          return newState;
         });
-        // Auto-play when it's the first sound
-        if (activeSounds.length === 0) {
-          setIsPlaying(true);
+
+        // If this is the first sound or if already playing, play this new sound
+        if (activeSounds.length === 0 || isPlaying) {
+          // Safari-friendly play attempt
+          const playAudio = async () => {
+            try {
+              // Try to resume AudioContext for Safari
+              if (audioContext?.state === 'suspended') {
+                await audioContext.resume();
+              }
+              
+              const playPromise = audio.play();
+              if (playPromise !== undefined) {
+                await playPromise;
+              }
+              
+              // Auto-play when it's the first sound
+              if (activeSounds.length === 0) {
+                setIsPlaying(true);
+              }
+            } catch (e) {
+              console.error("Failed to play audio:", e);
+              toast({
+                title: "Playback Failed",
+                description: "Could not play the audio. Try clicking anywhere on the screen first.",
+                variant: "destructive"
+              });
+            }
+          };
+          
+          playAudio();
         }
+        
+        toast({
+          description: `${sound.name} is now playing`,
+        });
+      } catch (e) {
+        console.error("Error creating audio element:", e);
+        toast({
+          title: "Audio Error",
+          description: "There was an error setting up the audio. Please try again.",
+          variant: "destructive"
+        });
       }
-      
-      toast({
-        description: `${sound.name} is now playing`,
-      });
     }
-  }, [activeSounds, isPlaying, masterVolume, audioState]);
+  }, [activeSounds, isPlaying, masterVolume, audioState, audioContext, initializeAudioContext]);
 
   // Update volume for a specific sound
   const setVolumeForSound = useCallback((soundId: string, volume: number) => {

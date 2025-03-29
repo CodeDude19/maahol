@@ -22,7 +22,27 @@ const urlsToCache = [
   '/maahol/sounds/thunder.ogg',
   '/maahol/sounds/train.ogg',
   '/maahol/sounds/white-noise.ogg',
-  '/maahol/sounds/wind.ogg'
+  '/maahol/sounds/wind.ogg',
+  // Add MP3 versions for Safari support
+  '/maahol/sounds/beach.mp3',
+  '/maahol/sounds/birds.mp3',
+  '/maahol/sounds/brown-noise.mp3',
+  '/maahol/sounds/cafe.mp3',
+  '/maahol/sounds/campfire.mp3',
+  '/maahol/sounds/city.mp3',
+  '/maahol/sounds/fireplace.mp3',
+  '/maahol/sounds/forest.mp3',
+  '/maahol/sounds/heavy-rain.mp3',
+  '/maahol/sounds/night-crickets.mp3',
+  '/maahol/sounds/pink-noise.mp3',
+  '/maahol/sounds/rain-camping.mp3',
+  '/maahol/sounds/rain-car.mp3',
+  '/maahol/sounds/rain.mp3',
+  '/maahol/sounds/snow.mp3',
+  '/maahol/sounds/thunder.mp3',
+  '/maahol/sounds/train.mp3',
+  '/maahol/sounds/white-noise.mp3',
+  '/maahol/sounds/wind.mp3'
 ];
 
 self.addEventListener('install', (event) => {
@@ -56,7 +76,14 @@ self.addEventListener('fetch', (event) => {
           return response;
         }
         
-        // For assets, we'll let the network handle it since they have hashed names
+        // Special handling for audio file extensions
+        if (url.pathname.endsWith('.ogg') && !navigator.userAgent.includes('Safari')) {
+          return fetch(event.request);
+        } else if (url.pathname.endsWith('.mp3') && navigator.userAgent.includes('Safari')) {
+          return fetch(event.request);
+        }
+        
+        // For all other assets
         return fetch(event.request);
       })
   );
