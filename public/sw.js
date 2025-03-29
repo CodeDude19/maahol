@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maahol-v3.100';
+const CACHE_NAME = 'maahol-v3.200';
 const urlsToCache = [
   '/maahol/',
   '/maahol/index.html',
