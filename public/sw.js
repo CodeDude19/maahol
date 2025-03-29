@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maahol-v3.200';
+const CACHE_NAME = 'maahol-v3.300';
 const urlsToCache = [
   '/maahol/',
   '/maahol/index.html',
@@ -22,24 +22,43 @@ const urlsToCache = [
   '/maahol/sounds/thunder.ogg',
   '/maahol/sounds/train.ogg',
   '/maahol/sounds/white-noise.ogg',
-  '/maahol/sounds/wind.ogg',
-  '/maahol/src/index.css',
-  '/maahol/src/App.css',
-  '/maahol/src/main.tsx',
-  '/maahol/src/App.tsx'
+  '/maahol/sounds/wind.ogg'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(urlsToCache))
+      .then((cache) => {
+        return Promise.all(
+          urlsToCache.map(url => {
+            return cache.add(url).catch(err => {
+              console.warn(`Failed to cache ${url}:`, err);
+            });
+          })
+        );
+      })
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Only handle requests to our domain
+  if (url.origin !== 'https://codedude19.github.io') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
-      .then((response) => response || fetch(event.request))
+      .then((response) => {
+        // Return cached response if found
+        if (response) {
+          return response;
+        }
+        
+        // For assets, we'll let the network handle it since they have hashed names
+        return fetch(event.request);
+      })
   );
 });
 
