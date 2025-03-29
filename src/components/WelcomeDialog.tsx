@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAudio } from "@/contexts/AudioContext";
 import { sounds } from "@/data/sounds";
 
@@ -73,6 +73,9 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
             <img src="/maahol/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
             माहौल - Maahol
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Welcome to Maahol - Create your perfect sound environment
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 text-white/90 text-sm">

@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { Sound, sounds } from "@/data/sounds";
 import { toast } from "@/hooks/use-toast";
 
+declare global {
+  interface Window {
+    webkitAudioContext: new (contextOptions?: AudioContextOptions) => AudioContext;
+  }
+}
+
 export type TimerOption = 
   | "5min"
   | "15min" 
@@ -55,6 +61,32 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerEndTime, setTimerEndTime] = useState<number | null>(null);
   const [audioState, setAudioState] = useState<AudioState>({});
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+
+  const initializeAudioContext = useCallback(() => {
+    if (!audioContext) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      setAudioContext(ctx);
+    }
+  }, [audioContext]);
+
+  // Initialize context on first user interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      initializeAudioContext();
+      // Remove listeners after first interaction
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, [initializeAudioContext]);
 
   // Initialize audio context to prevent safari auto-play issues
   useEffect(() => {
