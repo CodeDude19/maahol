@@ -21,9 +21,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5 mx-5 mb-5 rounded-[10px]"
+      className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5 mx-2.5 mb-2.5 rounded-[10px]"
       style={{
-        boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1)"
+        boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1), 0 0 20px 0px rgba(255, 255, 255, 0.15)"
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Right column - Playback controls */}
-          <div className="flex flex-col items-center justify-between py-3 px-2 space-y-3 h-full">
+          <div className="flex flex-col items-center justify-between py-3 px-2 h-full space-y-4">
             <Button 
               className="rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/90 border border-white/20 hover:bg-white transition-all duration-300"
               style={{

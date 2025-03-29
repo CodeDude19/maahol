@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAudio } from "@/contexts/AudioContext";
-import { Timer, X } from "lucide-react";
+import { Clock, X } from "lucide-react";
 // Removed mobile hook import as we're maintaining desktop layout on all screens
 
 // Define our option type interface separately from the imported one
@@ -41,21 +41,21 @@ const TimerSelector: React.FC = () => {
       {timeRemaining !== null ? (
         <Button 
           variant="outline" 
-          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3"
+          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
           onClick={cancelTimer}
         >
-          <Timer className="h-4 w-4" />
-          <span className="font-mono">{formatTimeRemaining(timeRemaining)}</span>
+          <span className="font-mono text-sm">{formatTimeRemaining(timeRemaining)}</span>
+          <Clock className="h-3.5 w-3.5 ml-1" />
         </Button>
       ) : (
         <Popover>
           <PopoverTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3"
+              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
             >
-              <Timer className="h-4 w-4" />
-              <span>Timer</span>
+              <span className="text-sm">Timer</span>
+              <Clock className="h-3.5 w-3.5 ml-1" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2 border-white/30 bg-black/60 backdrop-blur-lg">

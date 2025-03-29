@@ -100,15 +100,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setActiveSounds(newActiveSounds);
       
       toast({
-        title: "Sound Removed",
         description: `${sound.name} has been removed`,
       });
     } else {
       // Check if we've reached the max number of concurrent sounds
       if (activeSounds.length >= MAX_CONCURRENT_SOUNDS) {
         toast({
-          title: "Maximum Sounds Reached",
-          description: `You can only play ${MAX_CONCURRENT_SOUNDS} sounds at once. Please remove one first.`,
+          description: `Three is harmony, above ${MAX_CONCURRENT_SOUNDS} is chaos!`,
           variant: "destructive"
         });
         return;
@@ -140,7 +138,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
       
       toast({
-        title: "Sound Added",
         description: `${sound.name} is now playing`,
       });
     }
