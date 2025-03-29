@@ -9,7 +9,7 @@ interface WelcomeDialogProps {
 }
 
 export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
-  const { toggleSound, updateVolume, activeSounds, pauseAllSounds } = useAudio();
+  const { toggleSound, updateVolume, activeSounds, pauseAllSounds, setVolumeForSound } = useAudio();
   const [isFirstVisit, setIsFirstVisit] = React.useState(true);
 
   // Check if this is first visit when dialog opens
@@ -46,7 +46,7 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
     const thunder = sounds.find(s => s.id === 'thunder');
 
     if (heavyRain && rainWindow && thunder) {
-      // Set volumes first
+      // Set volumes in audioState first
       updateVolume(heavyRain.id, 40);
       updateVolume(rainWindow.id, 90);
       updateVolume(thunder.id, 80);
@@ -55,6 +55,11 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
       toggleSound(heavyRain);
       toggleSound(rainWindow);
       toggleSound(thunder);
+
+      // Finally set the active sound volumes
+      setVolumeForSound(heavyRain.id, 0.4);
+      setVolumeForSound(rainWindow.id, 0.9);
+      setVolumeForSound(thunder.id, 0.8);
     }
 
     handleDialogClose();
