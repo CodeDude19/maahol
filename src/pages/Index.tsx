@@ -36,14 +36,14 @@ const Index = () => {
 
   return (
     <AudioProvider>
-      <div className="min-h-screen flex flex-col bg-black text-white">
+      <div className="min-h-screen flex flex-col bg-black text-white overflow-hidden">
         <AppBar 
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           categories={categories}
         />
         
-        <main className="flex-grow px-2 sm:px-4 mb-6 mt-[2.5vh] overflow-y-auto">
+        <main className="flex-grow px-2 sm:px-4 mb-6 mt-[2.5vh] overflow-y-auto overscroll-none">
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedCategory}
