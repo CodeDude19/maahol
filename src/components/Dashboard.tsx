@@ -55,12 +55,12 @@ const Dashboard: React.FC = () => {
             <Button 
               className="rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/90 border border-white/20 hover:bg-white transition-all duration-300"
               style={{
-                boxShadow: isPlaying ? "0 0 15px rgba(74, 222, 128, 0.6)" : "0 0 10px rgba(255, 255, 255, 0.2)"
+                boxShadow: "0 0 10px rgba(255, 255, 255, 0.2)"
               }}
               onClick={togglePlayPause}
             >
               {isPlaying ? 
-                <Pause className="h-6 w-6 md:h-7 md:w-7 text-green-400" /> : 
+                <Pause className="h-6 w-6 md:h-7 md:w-7 text-black fill-black" /> : 
                 <Play className="h-6 w-6 md:h-7 md:w-7 text-black fill-black" />
               }
             </Button>

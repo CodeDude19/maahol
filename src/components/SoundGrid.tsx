@@ -4,6 +4,7 @@ import { Sound } from "@/data/sounds";
 import { useAudio } from "@/contexts/AudioContext";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getLuminosity } from "@/lib/color";
 
 interface SoundGridProps {
   sounds: Sound[];
@@ -49,8 +50,8 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{
-              backgroundColor: isActive ? `${sound.color}15` : 'rgba(30, 30, 30, 0.6)',
-              boxShadow: isActive ? `0 0 15px ${sound.color}30` : 'none',
+              backgroundColor: isActive ? sound.color : 'rgba(255, 255, 255, 0.3)',
+              boxShadow: isActive ? `0 0 22px ${sound.color}90` : 'none',
               transition: 'background-color 0.3s ease',
               maxWidth: isMobile ? undefined : '100px',
               maxHeight: isMobile ? undefined : '100px',
@@ -62,21 +63,21 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
               <div 
                 className="absolute inset-0 neon-glow" 
                 style={{
-                  backgroundColor: `${sound.color}08`,
-                  backgroundImage: `radial-gradient(circle at center, ${sound.color}20 0%, ${sound.color}05 70%, transparent 100%)`,
+                  backgroundColor: `${sound.color}50`,
+                  backgroundImage: `radial-gradient(circle at center, ${sound.color}90 0%, ${sound.color}70 70%, ${sound.color}50 100%),`
                 }}
               />
             )}
             <div className="flex flex-col items-center justify-center space-y-2 z-10 px-2 w-full h-full">
               <img 
-                src={sound.iconPath}
+                src={isActive && getLuminosity(sound.color) > 0.7 ? sound.iconPath.replace('-W.png', '-B.png') : sound.iconPath}
                 alt={sound.name}
                 className="w-7 h-7 object-contain"
               />
               <h3 
-                className={`font-medium text-white ${isMobile ? 'text-xs' : ''} break-words text-center`}
+                className={`${isActive && getLuminosity(sound.color) > 0.7 ? 'text-black font-semibold' : 'text-white font-medium'} ${isMobile ? 'text-xs' : ''} break-words text-center`}
                 style={{ 
-                  fontWeight: isMobile ? 300 : 400,
+                  fontWeight: isMobile ? 300 : (isActive && getLuminosity(sound.color) > 0.7 ? 600 : 400),
                   letterSpacing: isMobile ? '0.01em' : 'normal',
                   lineHeight: '1.2',
                   fontSize: isMobile ? '0.675rem' : '0.81rem'
