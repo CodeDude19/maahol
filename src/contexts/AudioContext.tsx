@@ -18,18 +18,29 @@ interface ActiveSound {
   volume: number;
 }
 
+interface AudioState {
+  [key: string]: {
+    volume: number;
+    isPlaying: boolean;
+  };
+}
+
 interface AudioContextType {
   activeSounds: ActiveSound[];
   masterVolume: number;
   isPlaying: boolean;
   timer: TimerOption;
   timeRemaining: number | null;
+  audioState: AudioState;
   toggleSound: (sound: Sound) => void;
   setVolumeForSound: (soundId: string, volume: number) => void;
   setMasterVolume: (volume: number) => void;
   togglePlayPause: () => void;
   setTimer: (timer: TimerOption) => void;
   cancelTimer: () => void;
+  updateVolume: (soundId: string, volume: number) => void;
+  pauseAllSounds: () => void;
+  playAllActiveSounds: () => void;
 }
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -43,6 +54,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [timer, setTimerState] = useState<TimerOption>("endless");
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerEndTime, setTimerEndTime] = useState<number | null>(null);
+  const [audioState, setAudioState] = useState<AudioState>({});
 
   // Initialize audio context to prevent safari auto-play issues
   useEffect(() => {
@@ -67,6 +79,30 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.removeEventListener('click', unlockAudio);
     };
   }, []);
+
+  // Load saved state on initial mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('maahol_audio_state');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      // Set all sounds to paused initially when loading
+      const restoredState = Object.entries(parsedState).reduce((acc, [key, value]) => {
+        acc[key] = {
+          ...value as { volume: number; isPlaying: boolean },
+          isPlaying: false // Always start paused
+        };
+        return acc;
+      }, {} as AudioState);
+      setAudioState(restoredState);
+    }
+  }, []);
+
+  // Save state whenever it changes
+  useEffect(() => {
+    if (Object.keys(audioState).length > 0) {
+      localStorage.setItem('maahol_audio_state', JSON.stringify(audioState));
+    }
+  }, [audioState]);
 
   // Handle play/pause for all active sounds
   const updatePlayState = useCallback((shouldPlay: boolean) => {
@@ -273,18 +309,63 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
+  const updateVolume = (soundId: string, volume: number) => {
+    setAudioState(prev => ({
+      ...prev,
+      [soundId]: {
+        ...prev[soundId],
+        volume
+      }
+    }));
+  };
+
+  const pauseAllSounds = () => {
+    setIsPlaying(false);
+    setAudioState(prev => {
+      const newState = { ...prev };
+      Object.keys(newState).forEach(key => {
+        if (newState[key].isPlaying) {
+          newState[key] = { ...newState[key], isPlaying: false };
+        }
+      });
+      return newState;
+    });
+  };
+
+  const playAllActiveSounds = () => {
+    setIsPlaying(true);
+    setAudioState(prev => {
+      const newState = { ...prev };
+      Object.keys(newState).forEach(key => {
+        if (newState[key].volume > 0) {
+          newState[key] = { ...newState[key], isPlaying: true };
+        }
+      });
+      return newState;
+    });
+  };
+
+  useEffect(() => {
+    const hasAnyPlaying = Object.values(audioState).some(state => state.isPlaying);
+    setIsPlaying(hasAnyPlaying);
+  }, [audioState]);
+
   const contextValue: AudioContextType = {
     activeSounds,
     masterVolume,
     isPlaying,
     timer,
     timeRemaining,
+    audioState,
     toggleSound,
     setVolumeForSound,
     setMasterVolume: setMasterVolumeAndUpdate,
     togglePlayPause,
     setTimer,
-    cancelTimer
+    cancelTimer,
+    updateVolume,
+    pauseAllSounds,
+    playAllActiveSounds,
   };
 
   return (
