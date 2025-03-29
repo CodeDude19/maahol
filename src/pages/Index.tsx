@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { sounds } from "@/data/sounds";
 import SoundGrid from "@/components/SoundGrid";
 import Dashboard from "@/components/Dashboard";
 import AppBar from "@/components/AppBar";
+import InstallPWA from "@/components/InstallPWA";
 import { AudioProvider } from "@/contexts/AudioContext";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -43,7 +43,7 @@ const Index = () => {
           categories={categories}
         />
         
-        <main className="flex-grow px-2 sm:px-4 mb-6 overflow-y-auto">
+        <main className="flex-grow px-2 sm:px-4 mb-6 pt-4 overflow-y-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={selectedCategory}
@@ -60,6 +60,7 @@ const Index = () => {
         <footer className="sticky bottom-0 left-0 right-0 z-10">
           <Dashboard />
         </footer>
+        <InstallPWA />
       </div>
     </AudioProvider>
   );

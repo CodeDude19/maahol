@@ -4,7 +4,13 @@ import { useAudio } from "@/contexts/AudioContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X } from "lucide-react";
 
-const AppBar: React.FC = () => {
+interface AppBarProps {
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
+  categories: { id: string; name: string; }[];
+}
+
+const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, categories }) => {
   const { isPlaying } = useAudio();
   const [showInfo, setShowInfo] = React.useState(false);
   return (
