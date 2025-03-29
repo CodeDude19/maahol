@@ -1,23 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { SlidersHorizontal } from "lucide-react";
+import { useAudio } from "@/contexts/AudioContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
-interface AppBarProps {
-  selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
-  categories: { id: string; name: string }[];
-}
-
-const AppBar: React.FC<AppBarProps> = ({ 
-  selectedCategory, 
-  setSelectedCategory, 
-  categories 
-}) => {
+const AppBar: React.FC = () => {
+  const { isPlaying } = useAudio();
+  const [showInfo, setShowInfo] = React.useState(false);
   return (
-    <motion.div 
-      className="sticky top-2 z-50 py-4 px-4 mx-4 mt-2.5 rounded-[10px] backdrop-blur-lg bg-white/30 border border-white/20"
+    <>
+      <motion.div 
+        className="sticky top-2 z-50 py-4 px-4 mx-4 mt-2.5 rounded-[10px] backdrop-blur-lg bg-white/30 border border-white/20 cursor-pointer"
+        onClick={() => setShowInfo(true)}
       style={{
         boxShadow: "0 8px 32px -8px rgba(255, 255, 255, 0.1), 0 0 20px 0px rgba(255, 255, 255, 0.15)",
         '--appbar-height': '60px'
@@ -32,27 +26,59 @@ const AppBar: React.FC<AppBarProps> = ({
           <span className="text-white mr-2">Maahol</span> 
         </h1>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="border-white/30 hover:bg-white/10 bg-white/20 backdrop-blur-sm rounded-[10px]">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              {categories.find(c => c.id === selectedCategory)?.name || "All Sounds"}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="border-white/30 bg-white/20 backdrop-blur-lg rounded-[10px]">
-            {categories.map(category => (
-              <DropdownMenuItem 
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={selectedCategory === category.id ? "bg-white/10" : ""}
-              >
-                {category.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="w-8 h-8">
+          <img 
+            src={isPlaying ? "/images/wave.gif" : "/images/oval.gif"} 
+            alt="Playback status" 
+            className="w-full h-full object-contain"
+          />
+        </div>
       </div>
     </motion.div>
+
+      <Dialog open={showInfo} onOpenChange={setShowInfo}>
+        <DialogContent className="bg-black/80 backdrop-blur-lg border-white/20 text-white mx-auto max-w-4xl w-[calc(100%-2rem)]">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-medium flex items-center gap-2">
+              <img src="/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
+              माहौल - Maahol
+            </DialogTitle>
+          </DialogHeader>
+
+          
+          <div className="space-y-4 text-white/90">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">Best with Earphones</span> 🎧
+            </div>
+            
+            <p>An App to create a माहौल or an environment in your sound space, to elevate you and get rid of surrounding noise & distraction.</p>
+            
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">How to Use</h3>
+              <p>Use it for Work, Sleep & Focus.</p>
+              <p>Mix 2-3 Different ambient sounds together to create that Magic</p>
+            </div>
+            
+            <div className="space-y-2">
+              <p><span className="font-medium">Personal Favourite:</span> Heavy Rain + Thunder + Brown Noise</p>
+            </div>
+            
+            <div className="space-y-2 pt-4 border-t border-white/20">
+              <p className="font-medium">Creator: Yasser Arafat</p>
+              <a 
+                href="https://www.linkedin.com/in/yasserarafat007/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                Reach me Here!
+              </a>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+
   );
 };
 
