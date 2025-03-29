@@ -19,6 +19,10 @@ const Dashboard: React.FC = () => {
   
   const isMobile = useIsMobile();
 
+  if (activeSounds.length === 0) {
+    return null;
+  }
+
   return (
     <motion.div 
       className="bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5 mx-2.5 mb-2.5 rounded-[10px]"

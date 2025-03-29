@@ -99,6 +99,11 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       newActiveSounds.splice(existingIndex, 1);
       setActiveSounds(newActiveSounds);
       
+      // If removing the last sound, pause playback
+      if (newActiveSounds.length === 0) {
+        setIsPlaying(false);
+      }
+      
       toast({
         description: `${sound.name} has been removed`,
       });
@@ -125,8 +130,8 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       setActiveSounds(prev => [...prev, newSound]);
 
-      // If already playing, play this new sound
-      if (isPlaying) {
+      // If this is the first sound or if already playing, play this new sound
+      if (activeSounds.length === 0 || isPlaying) {
         audio.play().catch(e => {
           console.error("Failed to play audio:", e);
           toast({
@@ -135,6 +140,10 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             variant: "destructive"
           });
         });
+        // Auto-play when it's the first sound
+        if (activeSounds.length === 0) {
+          setIsPlaying(true);
+        }
       }
       
       toast({

@@ -17,7 +17,7 @@ const AppBar: React.FC<AppBarProps> = ({
 }) => {
   return (
     <motion.div 
-      className="sticky top-2 z-50 py-4 px-4 mx-2.5 mt-2.5 rounded-[10px] backdrop-blur-lg bg-white/30 border border-white/20"
+      className="sticky top-2 z-50 py-4 px-4 mx-4 mt-2.5 rounded-[10px] backdrop-blur-lg bg-white/30 border border-white/20"
       style={{
         boxShadow: "0 8px 32px -8px rgba(255, 255, 255, 0.1), 0 0 20px 0px rgba(255, 255, 255, 0.15)",
         '--appbar-height': '60px'
@@ -28,7 +28,8 @@ const AppBar: React.FC<AppBarProps> = ({
     >
       <div className="max-w-4xl mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-medium tracking-tight flex items-center">
-          <span className="text-green-400 mr-2">Maahol</span> 
+          <img src="/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 mr-2 rounded-full" style={{boxShadow: '0 0 30px rgba(16, 185, 129, 0.9), 0 0 50px rgba(16, 185, 129, 0.7)', clipPath: 'circle(50% at 50% 50%)', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))'}} />
+          <span className="text-white mr-2">Maahol</span> 
         </h1>
         
         <DropdownMenu>
