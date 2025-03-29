@@ -22,13 +22,13 @@ const AppBar: React.FC = () => {
     >
       <div className="max-w-4xl mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-medium tracking-tight flex items-center">
-          <img src="/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 mr-2 rounded-full" style={{boxShadow: '0 0 30px rgba(16, 185, 129, 0.9), 0 0 50px rgba(16, 185, 129, 0.7)', clipPath: 'circle(50% at 50% 50%)', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))'}} />
+          <img src="/serene-symphony-soundscapes/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 mr-2 rounded-full" style={{boxShadow: '0 0 30px rgba(16, 185, 129, 0.9), 0 0 50px rgba(16, 185, 129, 0.7)', clipPath: 'circle(50% at 50% 50%)', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))'}} />
           <span className="text-white mr-2">Maahol</span> 
         </h1>
         
         <div className="w-8 h-8">
           <img 
-            src={isPlaying ? "/images/wave.gif" : "/images/oval.gif"} 
+            src={isPlaying ? "/serene-symphony-soundscapes/images/wave.gif" : "/serene-symphony-soundscapes/images/oval.gif"} 
             alt="Playback status" 
             className="w-full h-full object-contain"
           />
@@ -40,7 +40,7 @@ const AppBar: React.FC = () => {
         <DialogContent className="bg-black/80 backdrop-blur-lg border-white/20 text-white mx-auto max-w-4xl w-[calc(100%-2rem)]">
           <DialogHeader>
             <DialogTitle className="text-xl font-medium flex items-center gap-2">
-              <img src="/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
+              <img src="/serene-symphony-soundscapes/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
               माहौल - Maahol
             </DialogTitle>
           </DialogHeader>
