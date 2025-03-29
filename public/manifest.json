@@ -2,8 +2,8 @@
   "name": "Maahol - Ambient Soundscapes",
   "short_name": "Maahol",
   "description": "Create your perfect sound environment with customizable ambient soundscapes",
-  "start_url": "/serene-symphony-soundscapes/",
-  "scope": "/serene-symphony-soundscapes/",
+  "start_url": "/maahol/",
+  "scope": "/maahol/",
   "display": "fullscreen",
   "orientation": "any",
   "background_color": "#000000",
@@ -11,13 +11,13 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/serene-symphony-soundscapes/images/Maahol.png",
+      "src": "/maahol/images/Maahol.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/serene-symphony-soundscapes/images/Maahol.png",
+      "src": "/maahol/images/Maahol.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

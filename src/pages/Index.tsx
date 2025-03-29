@@ -53,7 +53,7 @@ const IndexContent = () => {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               style={{
-                backgroundImage: 'url("/serene-symphony-soundscapes/images/rain.gif")',
+                backgroundImage: 'url("/maahol/images/rain.gif")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundRepeat: 'repeat',

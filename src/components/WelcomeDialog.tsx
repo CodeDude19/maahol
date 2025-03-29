@@ -70,7 +70,7 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
       <DialogContent className="bg-black/80 backdrop-blur-lg border-white/20 text-white mx-auto max-w-4xl w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle className="text-xl font-medium flex items-center gap-2">
-            <img src="/serene-symphony-soundscapes/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
+            <img src="/maahol/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 rounded-full" />
             माहौल - Maahol
           </DialogTitle>
         </DialogHeader>

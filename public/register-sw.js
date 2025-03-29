@@ -1,7 +1,7 @@
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/serene-symphony-soundscapes/sw.js')
+      .register('/maahol/sw.js')
       .then(registration => {
         console.log('ServiceWorker registration successful');
       })
