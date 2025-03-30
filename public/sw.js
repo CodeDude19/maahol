@@ -1,5 +1,9 @@
-const CACHE_NAME = 'maahol-v1-0.1';
+const CACHE_NAME = 'maahol-v1-0.2';
 const TEMP_CACHE_NAME = 'maahol-temp-cache';
+const ASSETS_CACHE_NAME = 'maahol-assets-cache';
+
+// Cache version timestamp - this will change with each build
+const CACHE_VERSION = new Date().toISOString();
 const urlsToCache = [
   '/maahol/',
   '/maahol/index.html',
@@ -83,6 +87,44 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Handle JS files and assets with a network-first strategy to get the latest versions
+  if (url.pathname.endsWith('.js') || url.pathname.includes('assets/') || url.pathname.includes('.css')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Only cache successful responses
+          if (response && response.status === 200) {
+            // Clone the response to store in cache
+            const responseToCache = response.clone();
+            
+            // Store in assets cache with version info
+            caches.open(ASSETS_CACHE_NAME)
+              .then(cache => {
+                // Add a custom header to track when this asset was cached
+                const headers = new Headers(responseToCache.headers);
+                headers.append('x-cached-at', CACHE_VERSION);
+                
+                const responseWithTimestamp = new Response(responseToCache.body, {
+                  status: responseToCache.status,
+                  statusText: responseToCache.statusText,
+                  headers: headers
+                });
+                
+                cache.put(event.request, responseWithTimestamp);
+              });
+          }
+            
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try to get from cache
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // For other resources, use cache-first strategy
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -98,8 +140,23 @@ self.addEventListener('fetch', (event) => {
           return fetch(event.request);
         }
         
-        // For all other assets
-        return fetch(event.request);
+        // For all other assets, fetch and cache
+        return fetch(event.request).then(response => {
+          // Don't cache non-successful responses
+          if (!response || response.status !== 200 || response.type !== 'basic') {
+            return response;
+          }
+          
+          // Clone the response to store in cache
+          const responseToCache = response.clone();
+          
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+            
+          return response;
+        });
       })
   );
 });
@@ -122,10 +179,10 @@ self.addEventListener('activate', (event) => {
         }
       }
       
-      // Then delete all old caches
+      // Keep the assets cache, but delete all other old caches
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== ASSETS_CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -135,6 +192,51 @@ self.addEventListener('activate', (event) => {
   
   // Claim all clients so they use the new version immediately
   event.waitUntil(self.clients.claim());
+  
+  // Clean up old assets in the assets cache
+  event.waitUntil(
+    caches.open(ASSETS_CACHE_NAME).then(cache => {
+      // Get all cached requests
+      return cache.keys().then(async requests => {
+        // Simple approach: if we have too many items, remove the oldest ones
+        // This avoids complex sorting issues
+        if (requests.length > 50) {
+          console.log(`Cleaning up assets cache, ${requests.length} items found`);
+          
+          // Get all responses with their timestamps
+          const entriesWithDates = [];
+          
+          for (const request of requests) {
+            try {
+              const response = await cache.match(request);
+              if (response) {
+                const cachedAt = response.headers.get('x-cached-at') || '';
+                entriesWithDates.push({ request, cachedAt });
+              }
+            } catch (error) {
+              console.error('Error accessing cached response:', error);
+            }
+          }
+          
+          // Sort by timestamp (oldest first)
+          entriesWithDates.sort((a, b) => {
+            return a.cachedAt.localeCompare(b.cachedAt);
+          });
+          
+          // Delete oldest entries, keeping the 30 newest
+          const entriesToDelete = entriesWithDates.slice(0, entriesWithDates.length - 30);
+          
+          console.log(`Removing ${entriesToDelete.length} old cached assets`);
+          
+          // Delete the old entries
+          const deletionPromises = entriesToDelete.map(entry => cache.delete(entry.request));
+          return Promise.all(deletionPromises);
+        }
+        
+        return Promise.resolve();
+      });
+    })
+  );
 });
 
 // Listen for the skipWaiting message from the client
