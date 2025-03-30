@@ -9,6 +9,7 @@ const urlsToCache = [
   '/maahol/index.html',
   '/maahol/manifest.json',
   '/maahol/images/Maahol.png',
+  '/maahol/images/cassete.png',
   '/maahol/sounds/beach.ogg',
   '/maahol/sounds/birds.ogg',
   '/maahol/sounds/brown-noise.ogg',

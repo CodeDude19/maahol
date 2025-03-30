@@ -3,9 +3,9 @@ import { useAudio } from "@/contexts/AudioContext";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
-import TimerSelector from "./TimerSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SoundMixesDialog from "./SoundMixesDialog";
 
 // Particle component
 const Particle = ({ delay }: { delay: number }) => (
@@ -62,6 +62,7 @@ const Dashboard: React.FC = () => {
   
   const isMobile = useIsMobile();
   const [particles] = useState(() => Array.from({ length: 8 }, (_, i) => i * 0.2));
+  const [showMixes, setShowMixes] = useState(false);
 
   if (activeSounds.length === 0) {
     return null;
@@ -118,13 +119,26 @@ const Dashboard: React.FC = () => {
                 }
               </Button>
             </div>
-            
-            <div className="w-full">
-              <TimerSelector />
-            </div>
+
+            <Button
+              variant="ghost"
+              className="p-0 hover:bg-transparent"
+              onClick={() => setShowMixes(true)}
+            >
+              <img 
+                src="/maahol/images/cassete.png" 
+                alt="Sound Mixes" 
+                className="w-[3.2rem] aspect-[512/336] md:w-[3.8rem] hover:opacity-90 transition-all duration-300"
+                style={{
+                  filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))",
+                  boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                }}
+              />
+            </Button>
           </div>
         </div>
       </div>
+      <SoundMixesDialog open={showMixes} onOpenChange={setShowMixes} />
     </motion.div>
   );
 };

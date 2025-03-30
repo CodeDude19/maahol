@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useAudio } from "@/contexts/AudioContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WelcomeDialog } from "./WelcomeDialog";
+import TimerSelector from "./TimerSelector";
 
 interface AppBarProps {
   selectedCategory: string;
@@ -46,55 +47,61 @@ const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, 
                 <span className="text-gray-400 text-xs mt-1">v1.3</span>
               </h1>
               
-              <div className="w-8 h-8 relative flex items-center justify-center">
-                <motion.div
-                  className="absolute inset-0"
-                  initial={false}
-                  animate={isPlaying ? {
-                    filter: "drop-shadow(0 0 8px rgba(255, 236, 179, 0.6))",
-                  } : {
-                    filter: "drop-shadow(0 0 0px rgba(255, 255, 255, 0))",
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-                    {/* Bulb base */}
-                    <path 
-                      d="M9 21h6m-6-2h6m-3-12v-4" 
-                      stroke={isPlaying ? "#ffd98a" : "#666"} 
-                      strokeWidth="1.5" 
-                      strokeLinecap="round"
-                    />
-                    {/* Bulb glass */}
-                    <motion.path
-                      d="M12 7c3.3 0 6 2.7 6 6 0 2.22-1.21 4.16-3 5.2-.46.27-1.22.8-1.5.8h-3c-.28 0-1.04-.53-1.5-.8-1.79-1.04-3-2.98-3-5.2 0-3.3 2.7-6 6-6z"
-                      fill={isPlaying ? "rgba(255, 236, 179, 0.8)" : "rgba(255, 255, 255, 0.1)"}
-                      stroke={isPlaying ? "#ffd98a" : "#666"}
-                      strokeWidth="1.5"
-                      initial={false}
-                      animate={isPlaying ? {
-                        fill: "rgba(255, 236, 179, 0.8)",
-                        stroke: "#ffd98a",
-                      } : {
-                        fill: "rgba(255, 255, 255, 0.1)",
-                        stroke: "#666",
-                      }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    {/* Light rays when on */}
-                    {isPlaying && (
-                      <motion.g
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+              <div className="flex items-center gap-4">
+                <div onClick={(e) => e.stopPropagation()}>
+                  <TimerSelector />
+                </div>
+                
+                <div className="w-8 h-8 relative flex items-center justify-center">
+                  <motion.div
+                    className="absolute inset-0"
+                    initial={false}
+                    animate={isPlaying ? {
+                      filter: "drop-shadow(0 0 8px rgba(255, 236, 179, 0.6))",
+                    } : {
+                      filter: "drop-shadow(0 0 0px rgba(255, 255, 255, 0))",
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+                      {/* Bulb base */}
+                      <path 
+                        d="M9 21h6m-6-2h6m-3-12v-4" 
+                        stroke={isPlaying ? "#ffd98a" : "#666"} 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                      />
+                      {/* Bulb glass */}
+                      <motion.path
+                        d="M12 7c3.3 0 6 2.7 6 6 0 2.22-1.21 4.16-3 5.2-.46.27-1.22.8-1.5.8h-3c-.28 0-1.04-.53-1.5-.8-1.79-1.04-3-2.98-3-5.2 0-3.3 2.7-6 6-6z"
+                        fill={isPlaying ? "rgba(255, 236, 179, 0.8)" : "rgba(255, 255, 255, 0.1)"}
+                        stroke={isPlaying ? "#ffd98a" : "#666"}
+                        strokeWidth="1.5"
+                        initial={false}
+                        animate={isPlaying ? {
+                          fill: "rgba(255, 236, 179, 0.8)",
+                          stroke: "#ffd98a",
+                        } : {
+                          fill: "rgba(255, 255, 255, 0.1)",
+                          stroke: "#666",
+                        }}
                         transition={{ duration: 0.3 }}
-                      >
-                        <path d="M12 3v-1M3.5 7l-1-1M20.5 7l1-1M4 15H3M21 15h-1" stroke="#ffd98a" strokeWidth="1.5" strokeLinecap="round">
-                          <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
-                        </path>
-                      </motion.g>
-                    )}
-                  </svg>
-                </motion.div>
+                      />
+                      {/* Light rays when on */}
+                      {isPlaying && (
+                        <motion.g
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <path d="M12 3v-1M3.5 7l-1-1M20.5 7l1-1M4 15H3M21 15h-1" stroke="#ffd98a" strokeWidth="1.5" strokeLinecap="round">
+                            <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite" />
+                          </path>
+                        </motion.g>
+                      )}
+                    </svg>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </motion.div>
