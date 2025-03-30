@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
         setInterval(() => {
           registration.update();
           console.log('Checking for service worker updates...');
-        }, 60 * 60 * 1000); // Check every hour
+        }, 60 * 1000); // Check every minute
       })
       .catch(err => {
         console.log('ServiceWorker registration failed: ', err);

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maahol-v3.302';
+const CACHE_NAME = 'maahol-v1-0.1';
 const TEMP_CACHE_NAME = 'maahol-temp-cache';
 const urlsToCache = [
   '/maahol/',
