@@ -119,7 +119,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         const parsedState = JSON.parse(savedState);
         
-        // Set the audio state with saved volumes but mark all as not playing
+        // Set the audio state with saved volumes but mark all as not playing initially
         const restoredState = Object.entries(parsedState).reduce((acc, [key, state]) => {
           acc[key] = {
             volume: (state as any).volume, // Preserve the exact volume value
@@ -129,14 +129,22 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }, {} as AudioState);
         
         setAudioState(restoredState);
+        
+        // Track if any sounds were previously playing (to restore state)
+        let hadPlayingSounds = false;
 
         // Add all previously active sounds to activeSounds but in paused state
         Object.entries(parsedState).forEach(([soundId, state]) => {
           const sound = sounds.find(s => s.id === soundId);
           if (sound && (state as any).volume > 0) {
             const audio = new Audio(sound.audioSrc);
-            audio.loop = false;
+            audio.loop = false; // Let crossfade handle looping
             audio.volume = ((state as any).volume / 100) * masterVolume;
+            
+            // Track if any sound was playing
+            if ((state as any).isPlaying) {
+              hadPlayingSounds = true;
+            }
             
             setActiveSounds(prev => [...prev, {
               sound,
@@ -160,6 +168,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Handle play/pause for all active sounds
   const updatePlayState = useCallback((shouldPlay: boolean) => {
+    // Update all active sounds' play state
     activeSounds.forEach(({ audio }) => {
       if (shouldPlay) {
         const playPromise = audio.play();
@@ -172,7 +181,23 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         audio.pause();
       }
     });
+
+    // Update global playing state
     setIsPlaying(shouldPlay && activeSounds.length > 0);
+
+    // Update the audioState to reflect playing status of all sounds
+    setAudioState(prev => {
+      const newState = { ...prev };
+      Object.keys(newState).forEach(key => {
+        newState[key] = { 
+          ...newState[key], 
+          isPlaying: shouldPlay 
+        };
+      });
+      // Save to localStorage
+      localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+      return newState;
+    });
   }, [activeSounds]);
 
   // Helper function to attach crossfade listener to an audio element
@@ -303,15 +328,13 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           volume
         };
         
-        setActiveSounds(prev => [...prev, newSound]);
-
         // Update audio state to mark as playing and save to persistence
         setAudioState(prev => {
           const newState = {
             ...prev,
             [sound.id]: {
               volume: volume * 100,
-              isPlaying: true
+              isPlaying: isPlaying // Set to current global state
             }
           };
           // Save to localStorage
@@ -319,8 +342,11 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return newState;
         });
 
-        // If this is the first sound or if already playing, play this new sound
-        if (activeSounds.length === 0 || isPlaying) {
+        // Add to activeSounds first
+        setActiveSounds(prev => [...prev, newSound]);
+
+        // Play immediately only if the global state is playing
+        if (isPlaying) {
           // Safari-friendly play attempt
           const playAudio = async () => {
             try {
@@ -333,11 +359,6 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               if (playPromise !== undefined) {
                 await playPromise;
               }
-              
-              // Auto-play when it's the first sound
-              if (activeSounds.length === 0) {
-                setIsPlaying(true);
-              }
             } catch (e) {
               console.error("Failed to play audio:", e);
               toast({
@@ -349,6 +370,22 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           };
           
           playAudio();
+        } else if (activeSounds.length === 0) {
+          // Special case: if it's the very first sound, let's start playing
+          setIsPlaying(true);
+          audio.play().catch(e => {
+            console.error("Failed to play audio:", e);
+          });
+          
+          // Update audioState to reflect that this sound is playing
+          setAudioState(prev => {
+            const newState = { ...prev };
+            Object.keys(newState).forEach(key => {
+              newState[key] = { ...newState[key], isPlaying: true };
+            });
+            localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+            return newState;
+          });
         }
         
         toast({
@@ -537,6 +574,19 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const hasAnyPlaying = Object.values(audioState).some(state => state.isPlaying);
     setIsPlaying(hasAnyPlaying);
   }, [audioState]);
+
+  // Apply crossfade listeners to restored sounds and handle initial playback
+  useEffect(() => {
+    if (activeSounds.length > 0 && attachCrossfadeListener) {
+      // Apply crossfade listeners to all sounds
+      activeSounds.forEach(({ audio, sound, volume }) => {
+        if (!(audio as any)._crossfadeListenerApplied) {
+          (audio as any)._crossfadeListenerApplied = true;
+          attachCrossfadeListener(audio, sound, volume);
+        }
+      });
+    }
+  }, [activeSounds, attachCrossfadeListener]);
 
   const contextValue: AudioContextType = {
     activeSounds,
