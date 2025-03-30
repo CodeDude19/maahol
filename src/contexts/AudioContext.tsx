@@ -122,7 +122,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Set the audio state with saved volumes but mark all as not playing
         const restoredState = Object.entries(parsedState).reduce((acc, [key, state]) => {
           acc[key] = {
-            volume: (state as any).volume,
+            volume: (state as any).volume, // Preserve the exact volume value
             isPlaying: false // Always start paused
           };
           return acc;
@@ -149,7 +149,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         console.error('Error restoring audio state:', error);
       }
     }
-  }, []);
+  }, [masterVolume]);
 
   // Save state whenever it changes
   useEffect(() => {
@@ -367,6 +367,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Update volume for a specific sound
   const setVolumeForSound = useCallback((soundId: string, volume: number) => {
+    // Update active sound's volume
     setActiveSounds(prev => 
       prev.map(activeSound => {
         if (activeSound.sound.id === soundId) {
@@ -376,6 +377,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return activeSound;
       })
     );
+    
+    // Also update audioState to persist the volume setting
+    updateVolume(soundId, volume * 100); // Convert to 0-100 scale for storage
   }, [masterVolume]);
 
   // Set master volume and apply it to all sounds
@@ -487,13 +491,20 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const updateVolume = (soundId: string, volume: number) => {
-    setAudioState(prev => ({
-      ...prev,
-      [soundId]: {
-        ...prev[soundId],
-        volume
-      }
-    }));
+    setAudioState(prev => {
+      const newState = {
+        ...prev,
+        [soundId]: {
+          ...prev[soundId],
+          volume
+        }
+      };
+      
+      // Save immediately to localStorage
+      localStorage.setItem('maahol_audio_state', JSON.stringify(newState));
+      
+      return newState;
+    });
   };
 
   const pauseAllSounds = () => {
