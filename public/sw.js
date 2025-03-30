@@ -1,4 +1,5 @@
-const CACHE_NAME = 'maahol-v3.300';
+const CACHE_NAME = 'maahol-v3.301';
+const TEMP_CACHE_NAME = 'maahol-temp-cache';
 const urlsToCache = [
   '/maahol/',
   '/maahol/index.html',
@@ -46,8 +47,12 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
+  // Don't activate immediately - wait until the user accepts the update
+  self.skipWaiting = false;
+  
   event.waitUntil(
-    caches.open(CACHE_NAME)
+    // Use a temporary cache for the new version
+    caches.open(TEMP_CACHE_NAME)
       .then((cache) => {
         return Promise.all(
           urlsToCache.map(url => {
@@ -56,6 +61,16 @@ self.addEventListener('install', (event) => {
             });
           })
         );
+      })
+      .then(() => {
+        // After caching is complete, notify the client that an update is available
+        self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'updateAvailable'
+            });
+          });
+        });
       })
   );
 });
@@ -91,7 +106,23 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(async (cacheNames) => {
+      // First, copy all content from temp cache to main cache
+      if (cacheNames.includes(TEMP_CACHE_NAME)) {
+        const tempCache = await caches.open(TEMP_CACHE_NAME);
+        const mainCache = await caches.open(CACHE_NAME);
+        const tempKeys = await tempCache.keys();
+        
+        // Copy all entries from temp cache to main cache
+        for (const request of tempKeys) {
+          const response = await tempCache.match(request);
+          if (response) {
+            await mainCache.put(request, response);
+          }
+        }
+      }
+      
+      // Then delete all old caches
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
@@ -101,4 +132,14 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  
+  // Claim all clients so they use the new version immediately
+  event.waitUntil(self.clients.claim());
+});
+
+// Listen for the skipWaiting message from the client
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
