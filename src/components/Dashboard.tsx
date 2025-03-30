@@ -100,7 +100,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Right column - Playback controls */}
-          <div className="flex flex-col items-center justify-between py-3 px-2 h-full space-y-4">
+          <div className="flex flex-col items-center justify-between py-3 px-2 h-full space-y-6">
             <div className="relative">
               <CircleWave isPlaying={isPlaying} />
               {isPlaying && particles.map((delay, index) => (
@@ -120,21 +120,24 @@ const Dashboard: React.FC = () => {
               </Button>
             </div>
 
-            <Button
-              variant="ghost"
-              className="p-0 hover:bg-transparent"
-              onClick={() => setShowMixes(true)}
-            >
-              <img 
-                src="/maahol/images/cassete.png" 
-                alt="Sound Mixes" 
-                className="w-[3.2rem] aspect-[512/336] md:w-[3.8rem] hover:opacity-90 transition-all duration-300"
-                style={{
-                  filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))",
-                  boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
-                }}
-              />
-            </Button>
+            <div className="flex flex-col items-center space-y-1">
+              <Button
+                variant="ghost"
+                className="p-0 hover:bg-transparent"
+                onClick={() => setShowMixes(true)}
+              >
+                <img 
+                  src="/maahol/images/cassete.png" 
+                  alt="Sound Mixes" 
+                  className="w-[2.9rem] aspect-[512/336] md:w-[3.4rem] hover:opacity-90 transition-all duration-300"
+                  style={{
+                    filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))",
+                    boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
+                  }}
+                />
+              </Button>
+              <span className="text-xs font-medium text-black/80">Mixes</span>
+            </div>
           </div>
         </div>
       </div>
