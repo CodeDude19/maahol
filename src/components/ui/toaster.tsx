@@ -19,7 +19,7 @@ export function Toaster() {
             <div className="grid gap-1 text-center w-full py-1 px-2">
               {title && <ToastTitle className="text-white font-medium">{title}</ToastTitle>}
               {description && (
-                <ToastDescription className="text-white/80">{description}</ToastDescription>
+                <ToastDescription className={props.variant === "destructive" ? "text-black font-bold" : "text-white/80"}>{description}</ToastDescription>
               )}
             </div>
             {action}
