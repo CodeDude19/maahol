@@ -135,7 +135,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const sound = sounds.find(s => s.id === soundId);
           if (sound && (state as any).volume > 0) {
             const audio = new Audio(sound.audioSrc);
-            audio.loop = true;
+            audio.loop = false;
             audio.volume = ((state as any).volume / 100) * masterVolume;
             
             setActiveSounds(prev => [...prev, {
@@ -174,6 +174,68 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
     setIsPlaying(shouldPlay && activeSounds.length > 0);
   }, [activeSounds]);
+
+  // Helper function to attach crossfade listener to an audio element
+  const attachCrossfadeListener = useCallback((audio: HTMLAudioElement, sound: Sound, volume: number) => {
+    // Use a custom property to avoid multiple triggers
+    (audio as any)._crossfadeTriggered = false;
+    audio.addEventListener("timeupdate", function onTimeUpdate() {
+      if ((audio as any)._crossfadeTriggered) return;
+      if (!audio.duration || audio.duration === Infinity) return;
+      if (audio.currentTime >= audio.duration - 3) {
+        (audio as any)._crossfadeTriggered = true;
+        crossfadeSound(audio, sound, volume);
+      }
+    });
+  }, []);
+
+  // Helper function to perform a 3-second crossfade transition
+  const crossfadeSound = useCallback((oldAudio: HTMLAudioElement, sound: Sound, volume: number) => {
+    // Create a new audio element for the same sound
+    const newAudio = new Audio(sound.audioSrc);
+    newAudio.loop = false;
+    newAudio.preload = "auto";
+    newAudio.volume = 0;
+    // Attach the crossfade listener for future loops
+    attachCrossfadeListener(newAudio, sound, volume);
+
+    newAudio.play().catch(e => {
+      console.error("Crossfade new audio play failed:", e);
+    });
+
+    const fadeDuration = 3000; // 3 seconds in ms
+    const fadeSteps = 60; // number of steps for the fade (adjustable)
+    const stepInterval = fadeDuration / fadeSteps;
+    const oldInitialVolume = oldAudio.volume;
+    const targetVolume = volume * masterVolume; // current masterVolume
+
+    let currentStep = 0;
+    const fadeInterval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / fadeSteps;
+      // Use quadratic easing for a smoother transition
+      const easedProgress = progress * progress;
+      const newVol = targetVolume * easedProgress;
+      const oldVol = oldInitialVolume * (1 - easedProgress);
+      oldAudio.volume = oldVol;
+      newAudio.volume = newVol;
+      if (currentStep >= fadeSteps) {
+        clearInterval(fadeInterval);
+        oldAudio.pause();
+        oldAudio.src = "";
+        // Ensure the new audio ends at the exact target volume
+        newAudio.volume = targetVolume;
+        setActiveSounds(prev =>
+          prev.map(asound => {
+            if (asound.audio === oldAudio) {
+              return { ...asound, audio: newAudio };
+            }
+            return asound;
+          })
+        );
+      }
+    }, stepInterval);
+  }, [masterVolume, attachCrossfadeListener]);
 
   // Toggle a sound on/off
   const toggleSound = useCallback((sound: Sound) => {
@@ -231,6 +293,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         // For Safari: preload the audio
         audio.preload = 'auto';
+        
+        // Attach crossfade listener for seamless looping
+        attachCrossfadeListener(audio, sound, volume);
         
         const newSound: ActiveSound = {
           sound,
@@ -298,7 +363,7 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
     }
-  }, [activeSounds, isPlaying, masterVolume, audioState, audioContext, initializeAudioContext]);
+  }, [activeSounds, isPlaying, masterVolume, audioState, audioContext, initializeAudioContext, attachCrossfadeListener]);
 
   // Update volume for a specific sound
   const setVolumeForSound = useCallback((soundId: string, volume: number) => {
