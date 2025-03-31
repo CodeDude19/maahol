@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import SoundMixesDialog from "./SoundMixesDialog";
+import NewSoundMixesDialog from "./NewSoundMixesDialog";
 
 // Particle component
 const Particle = ({ delay }: { delay: number }) => (
@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
     setMasterVolume, 
     isPlaying, 
     togglePlayPause 
-  } = useAudio();
+  } = useAudioState();
   
   const isMobile = useIsMobile();
   const [particles] = useState(() => Array.from({ length: 8 }, (_, i) => i * 0.2));
@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
-      <SoundMixesDialog open={showMixes} onOpenChange={setShowMixes} />
+      <NewSoundMixesDialog open={showMixes} onOpenChange={setShowMixes} />
     </motion.div>
   );
 };

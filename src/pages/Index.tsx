@@ -4,14 +4,14 @@ import SoundGrid from "@/components/SoundGrid";
 import Dashboard from "@/components/Dashboard";
 import AppBar from "@/components/AppBar";
 import InstallPWA from "@/components/InstallPWA";
-import { AudioProvider, useAudio } from "@/contexts/AudioContext";
+import { AudioStateProvider, useAudioState } from "@/contexts/AudioStateContext";
 import { AnimatePresence, motion } from "framer-motion";
 
 const IndexContent = () => {
   const [mounted, setMounted] = useState(false);
   const [filteredSounds, setFilteredSounds] = useState(sounds);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const { activeSounds } = useAudio();
+  const { activeSounds } = useAudioState();
 
   useEffect(() => {
     setMounted(true);
@@ -86,9 +86,9 @@ const IndexContent = () => {
 
 const Index = () => {
   return (
-    <AudioProvider>
+    <AudioStateProvider>
       <IndexContent />
-    </AudioProvider>
+    </AudioStateProvider>
   );
 };
 

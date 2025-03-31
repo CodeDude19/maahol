@@ -1,19 +1,15 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { motion } from "framer-motion";
 import { sounds } from "@/data/sounds";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { getLuminosity } from "@/lib/color";
+import { SoundMix } from "@/lib/AudioStateManager";
 
-interface SoundMix {
-  name: string;
-  description: string;
-  sounds: { id: string; volume: number }[];
-}
-
+// Sound mixes definition
 const soundMixes: SoundMix[] = [
   {
     name: "Snowy Night & Camping",
@@ -74,25 +70,13 @@ interface SoundMixesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const SoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChange }) => {
-  const { toggleSound, setVolumeForSound, activeSounds } = useAudio();
+const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChange }) => {
+  const { applyMix } = useAudioState();
   const isMobile = useIsMobile();
 
-  const applyMix = (mix: SoundMix) => {
-    // First, stop all current sounds
-    activeSounds.forEach(({ sound }) => {
-      toggleSound(sound);
-    });
-
-    // Then apply the new mix
-    mix.sounds.forEach(({ id, volume }) => {
-      const sound = sounds.find(s => s.id === id);
-      if (sound) {
-        toggleSound(sound);
-        setVolumeForSound(id, volume);
-      }
-    });
-
+  const handleApplyMix = (mix: SoundMix) => {
+    // Using the new applyMix function from AudioStateContext
+    applyMix(mix);
     onOpenChange(false);
   };
 
@@ -121,7 +105,7 @@ const SoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChange 
               <Button
                 variant="outline"
                 className="w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 hover:bg-white/10 transition-colors overflow-visible"
-                onClick={() => applyMix(mix)}
+                onClick={() => handleApplyMix(mix)}
               >
                 <div className="w-full text-left pr-2">
                   <span className="text-base font-medium text-white block">{mix.name}</span>
@@ -178,4 +162,4 @@ const SoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChange 
   );
 };
 
-export default SoundMixesDialog;
+export default NewSoundMixesDialog;

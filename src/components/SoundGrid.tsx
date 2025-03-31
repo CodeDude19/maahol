@@ -1,6 +1,6 @@
 import React from "react";
 import { Sound } from "@/data/sounds";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getLuminosity } from "@/lib/color";
@@ -10,7 +10,7 @@ interface SoundGridProps {
 }
 
 const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
-  const { activeSounds, toggleSound } = useAudio();
+  const { activeSounds, toggleSound } = useAudioState();
   const isMobile = useIsMobile();
   
   const container = {

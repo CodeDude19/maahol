@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { WelcomeDialog } from "./WelcomeDialog";
 import TimerSelector from "./TimerSelector";
@@ -12,7 +12,7 @@ interface AppBarProps {
 }
 
 const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, categories }) => {
-  const { isPlaying } = useAudio();
+  const { isPlaying } = useAudioState();
   const [showInfo, setShowInfo] = React.useState(false);
   const isMobile = useIsMobile();
 

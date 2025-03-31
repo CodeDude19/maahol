@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { Clock, X } from "lucide-react";
 // Removed mobile hook import as we're maintaining desktop layout on all screens
 
@@ -33,7 +33,7 @@ const formatTimeRemaining = (ms: number): string => {
 };
 
 const TimerSelector: React.FC = () => {
-  const { timer, timeRemaining, setTimer, cancelTimer } = useAudio();
+  const { timer, timeRemaining, setTimer, cancelTimer } = useAudioState();
   // Removed mobile check as we're maintaining desktop layout on all screens
 
   return (

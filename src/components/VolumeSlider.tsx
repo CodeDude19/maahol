@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Sound } from "@/data/sounds";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 
 interface VolumeSliderProps {
   sound: Sound;
@@ -9,7 +9,7 @@ interface VolumeSliderProps {
 }
 
 const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound, volume }) => {
-  const { setVolumeForSound } = useAudio();
+  const { setVolumeForSound } = useAudioState();
   const [localVolume, setLocalVolume] = useState(volume);
   const sliderRef = useRef<HTMLDivElement>(null);
 

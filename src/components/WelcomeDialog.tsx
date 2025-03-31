@@ -1,6 +1,6 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useAudio } from "@/contexts/AudioContext";
+import { useAudioState } from "@/contexts/AudioStateContext";
 import { sounds } from "@/data/sounds";
 
 interface WelcomeDialogProps {
@@ -9,7 +9,7 @@ interface WelcomeDialogProps {
 }
 
 export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
-  const { toggleSound, updateVolume, activeSounds, pauseAllSounds, setVolumeForSound } = useAudio();
+  const { toggleSound, updateVolume, activeSounds, pauseAllSounds, setVolumeForSound } = useAudioState();
   const [isFirstVisit, setIsFirstVisit] = React.useState(true);
 
   // Check if this is first visit when dialog opens
@@ -129,4 +129,4 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}
