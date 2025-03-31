@@ -66,6 +66,15 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Wrapper functions with toast notifications
   const toggleSound = (sound: Sound) => {
     const isActive = audioState.activeSounds.some(as => as.sound.id === sound.id);
+    
+    // If not active and we already have 3 sounds, show toast and don't add
+    if (!isActive && audioState.activeSounds.length >= 3) {
+      toast({
+        description: "Three create harmony, above 3 maahol is Chaos!",
+      });
+      return;
+    }
+    
     audioStateManager.toggleSound(sound);
     
     if (isActive) {

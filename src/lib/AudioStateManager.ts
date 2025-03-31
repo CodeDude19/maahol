@@ -207,9 +207,8 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
         
         // Determine if we should start playing
         let newIsPlaying = state.isPlaying;
-        if (state.activeSounds.length === 0) {
-          newIsPlaying = true;
-        }
+        // Only auto-start playing if this is a direct user action, not during initialization
+        // This prevents auto-play on page reload
         
         // Play the sound if we're in playing state
         if (newIsPlaying) {
@@ -572,6 +571,13 @@ class AudioStateManager {
         
         this.dispatch({ type: 'INITIALIZE_STATE', savedState: restoredState });
         
+        // Temporarily set isPlaying to false to prevent auto-play during initialization
+        const originalIsPlaying = this.state.isPlaying;
+        this.state = {
+          ...this.state,
+          isPlaying: false
+        };
+        
         // Add all previously active sounds to activeSounds but in paused state
         Object.entries(parsedState).forEach(([soundId, state]) => {
           const sound = sounds.find(s => s.id === soundId);
@@ -579,6 +585,15 @@ class AudioStateManager {
             this.toggleSound(sound);
           }
         });
+        
+        // Restore original isPlaying state (which is false by default)
+        this.state = {
+          ...this.state,
+          isPlaying: false
+        };
+        
+        // Notify listeners of the final state
+        this.listeners.forEach(listener => listener(this.state));
       } catch (error) {
         console.error('Error restoring audio state:', error);
       }
