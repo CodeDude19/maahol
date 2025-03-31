@@ -129,7 +129,7 @@ const Dashboard: React.FC = () => {
                 <img 
                   src="/maahol/images/cassete.png" 
                   alt="Sound Mixes" 
-                  className="w-[2.9rem] aspect-[512/328] md:w-[3.4rem] hover:opacity-90 transition-all duration-300"
+                  className="w-[2.9rem] aspect-[512/330] md:w-[3.4rem] hover:opacity-90 transition-all duration-300"
                   style={{
                     filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))",
                     boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
