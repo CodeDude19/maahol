@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Sound } from '@/data/sounds';
 import { toast } from '@/hooks/use-toast';
+import { soundMixes } from '@/data/soundMixes';
+
 import {
   audioStateManager,
   AudioState,
@@ -26,6 +28,9 @@ interface AudioContextType {
   pauseAllSounds: () => void;
   playAllActiveSounds: () => void;
   applyMix: (mix: SoundMix) => void;
+  saveCustomMix: (mix: SoundMix) => void;
+  getCustomMixes: () => SoundMix[];
+  isCurrentMixPredefined: () => boolean;
 }
 
 const AudioStateContext = createContext<AudioContextType | undefined>(undefined);
@@ -160,6 +165,39 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
+  const saveCustomMix = (mix: SoundMix) => {
+    audioStateManager.saveCustomMix(mix);
+    
+    toast({
+      title: "Mix Saved",
+      description: `${mix.name} has been saved to your custom mixes`,
+    });
+  };
+
+  const getCustomMixes = (): SoundMix[] => {
+    return audioStateManager.getCustomMixes();
+  };
+
+  // Check if current mix matches any predefined mix
+  const isCurrentMixPredefined = (): boolean => {
+    if (audioState.activeSounds.length === 0) return false;
+    
+    // For each predefined mix, check if it matches the current active sounds
+    return soundMixes.some(mix => {
+      // If the number of sounds doesn't match, it's not the same mix
+      if (mix.sounds.length !== audioState.activeSounds.length) return false;
+      
+      // Check if all sounds in the mix are in the active sounds with the same volume
+      return mix.sounds.every(mixSound => {
+        const activeSound = audioState.activeSounds.find(as => as.sound.id === mixSound.id);
+        if (!activeSound) return false;
+        
+        // Compare volumes with a small tolerance for floating point differences
+        return Math.abs(activeSound.volume - mixSound.volume) < 0.01;
+      });
+    });
+  };
+
   const contextValue: AudioContextType = {
     activeSounds: audioState.activeSounds,
     masterVolume: audioState.masterVolume,
@@ -176,7 +214,10 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     updateVolume,
     pauseAllSounds,
     playAllActiveSounds,
-    applyMix
+    applyMix,
+    saveCustomMix,
+    getCustomMixes,
+    isCurrentMixPredefined
   };
 
   return (

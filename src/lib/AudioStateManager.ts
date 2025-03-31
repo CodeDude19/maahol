@@ -50,11 +50,13 @@ export type AudioAction =
   | { type: 'PAUSE_ALL_SOUNDS' }
   | { type: 'PLAY_ALL_SOUNDS' }
   | { type: 'APPLY_MIX'; mix: SoundMix }
+  | { type: 'SAVE_CUSTOM_MIX'; mix: SoundMix }
   | { type: 'INITIALIZE_STATE'; savedState: Record<string, SoundState> };
 
 // Constants
 export const MAX_CONCURRENT_SOUNDS = 3;
 const LOCAL_STORAGE_KEY = 'maahol_audio_state';
+const CUSTOM_MIXES_KEY = 'maahol_custom_mixes';
 
 // Initial state
 export const initialAudioState: AudioState = {
@@ -531,6 +533,12 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
       };
     }
     
+    case 'SAVE_CUSTOM_MIX': {
+      const { mix } = action;
+      // This doesn't modify the state, but the AudioStateManager will handle saving the mix
+      return state;
+    }
+    
     default:
       return state;
   }
@@ -541,14 +549,19 @@ class AudioStateManager {
   private state: AudioState;
   private listeners: Set<(state: AudioState) => void>;
   private timerInterval: number | null;
+  private customMixes: SoundMix[];
   
   constructor() {
     this.state = initialAudioState;
     this.listeners = new Set();
     this.timerInterval = null;
+    this.customMixes = [];
     
     // Load saved state from localStorage
     this.loadSavedState();
+    
+    // Load custom mixes from localStorage
+    this.loadCustomMixes();
     
     // Start timer if needed
     this.startTimerIfNeeded();
@@ -600,6 +613,22 @@ class AudioStateManager {
     }
   }
   
+  private loadCustomMixes() {
+    const savedMixes = localStorage.getItem(CUSTOM_MIXES_KEY);
+    if (savedMixes) {
+      try {
+        this.customMixes = JSON.parse(savedMixes);
+      } catch (error) {
+        console.error('Error loading custom mixes:', error);
+        this.customMixes = [];
+      }
+    }
+  }
+  
+  private saveCustomMixesToStorage() {
+    localStorage.setItem(CUSTOM_MIXES_KEY, JSON.stringify(this.customMixes));
+  }
+  
   private startTimerIfNeeded() {
     if (this.state.timerEndTime) {
       this.startTimer();
@@ -646,6 +675,17 @@ class AudioStateManager {
       this.startTimer();
     } else if (action.type === 'CANCEL_TIMER') {
       this.stopTimer();
+    } else if (action.type === 'SAVE_CUSTOM_MIX') {
+      // Handle saving custom mix
+      const existingIndex = this.customMixes.findIndex(m => m.name === action.mix.name);
+      if (existingIndex !== -1) {
+        // Update existing mix
+        this.customMixes[existingIndex] = action.mix;
+      } else {
+        // Add new mix
+        this.customMixes.push(action.mix);
+      }
+      this.saveCustomMixesToStorage();
     }
     
     // Notify all listeners of state change
@@ -697,6 +737,14 @@ class AudioStateManager {
   
   public applyMix(mix: SoundMix) {
     this.dispatch({ type: 'APPLY_MIX', mix });
+  }
+  
+  public saveCustomMix(mix: SoundMix) {
+    this.dispatch({ type: 'SAVE_CUSTOM_MIX', mix });
+  }
+  
+  public getCustomMixes(): SoundMix[] {
+    return [...this.customMixes];
   }
   
   // Cleanup

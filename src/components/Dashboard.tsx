@@ -6,6 +6,7 @@ import VolumeSlider from "./VolumeSlider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import NewSoundMixesDialog from "./NewSoundMixesDialog";
+import SaveMixDialog from "./SaveMixDialog";
 
 // Particle component
 const Particle = ({ delay }: { delay: number }) => (
@@ -57,12 +58,17 @@ const Dashboard: React.FC = () => {
     masterVolume, 
     setMasterVolume, 
     isPlaying, 
-    togglePlayPause 
+    togglePlayPause,
+    isCurrentMixPredefined
   } = useAudioState();
   
   const isMobile = useIsMobile();
   const [particles] = useState(() => Array.from({ length: 8 }, (_, i) => i * 0.2));
   const [showMixes, setShowMixes] = useState(false);
+  const [showSaveMixDialog, setShowSaveMixDialog] = useState(false);
+  
+  // Determine if the save mix button should be disabled
+  const isSaveButtonDisabled = activeSounds.length === 0 || isCurrentMixPredefined();
 
   if (activeSounds.length === 0) {
     return null;
@@ -91,6 +97,16 @@ const Dashboard: React.FC = () => {
                     volume={volume}
                   />
                 ))}
+                
+                {/* Save Custom Mix Button */}
+                <Button
+                  variant="outline"
+                  className={`w-full mt-4 bg-white text-black hover:bg-white/90 transition-all ${isSaveButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  onClick={() => setShowSaveMixDialog(true)}
+                  disabled={isSaveButtonDisabled}
+                >
+                  Save this custom mix
+                </Button>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full py-4 text-white/60 text-sm">
@@ -142,6 +158,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
       <NewSoundMixesDialog open={showMixes} onOpenChange={setShowMixes} />
+      <SaveMixDialog open={showSaveMixDialog} onOpenChange={setShowSaveMixDialog} />
     </motion.div>
   );
 };
