@@ -96,6 +96,39 @@ const attachCrossfadeListener = (
   // Use a custom property to avoid multiple triggers
   (audio as any)._crossfadeTriggered = false;
   
+  // Add an error handler to detect and recover from audio errors
+  const handleAudioError = (e: Event) => {
+    console.error(`Audio error for ${sound.name}:`, e);
+    
+    // If the audio element has an error, try to recover by recreating it
+    if (audio.error && audio.error.code) {
+      console.log(`Attempting to recover from error for ${sound.name}`);
+      
+      // Only attempt recovery if the audio isn't already being crossfaded
+      if (!(audio as any)._crossfadeTriggered) {
+        // Create a replacement audio element
+        const replacementAudio = new Audio(sound.audioSrc);
+        replacementAudio.loop = false;
+        replacementAudio.preload = "auto";
+        replacementAudio.volume = audio.volume; // Maintain the same volume
+        
+        // Attach the crossfade listener to the new audio
+        attachCrossfadeListener(replacementAudio, sound, volume, masterVolume, onCrossfade);
+        
+        // If the original was playing, play the replacement
+        if (!audio.paused) {
+          replacementAudio.play().catch(err => {
+            console.error(`Failed to play replacement audio for ${sound.name}:`, err);
+          });
+        }
+        
+        // Notify the state manager to update the audio reference
+        console.log(`Replacing errored audio for ${sound.name}`);
+        onCrossfade(audio, replacementAudio);
+      }
+    }
+  };
+  
   const handleTimeUpdate = () => {
     if ((audio as any)._crossfadeTriggered) return;
     if (!audio.duration || audio.duration === Infinity) return;
@@ -131,6 +164,15 @@ const attachCrossfadeListener = (
             console.log(`Playing new audio for ${sound.name} after canplaythrough event`);
             newAudio.play().catch(e => {
               console.error("Crossfade new audio play failed:", e);
+              // Try again after a short delay if it failed
+              setTimeout(() => {
+                if (isCurrentlyPlaying) {
+                  console.log(`Retrying play for ${sound.name} after failure`);
+                  newAudio.play().catch(retryErr => {
+                    console.error(`Retry play also failed for ${sound.name}:`, retryErr);
+                  });
+                }
+              }, 500);
             });
           }
         }, { once: true });
@@ -190,7 +232,10 @@ const attachCrossfadeListener = (
     }
   };
   
+  // Add error event listener to detect and recover from audio errors
+  audio.addEventListener("error", handleAudioError);
   audio.addEventListener("timeupdate", handleTimeUpdate);
+  
   return handleTimeUpdate;
 };
 
@@ -870,6 +915,50 @@ class AudioStateManager {
     const activeSound = this.state.activeSounds.find(as => as.audio === oldAudio);
     if (!activeSound) {
       console.error('AudioStateManager: Could not find active sound with the old audio element');
+      
+      // This is a critical error - we need to check if the newAudio matches any sound in our library
+      // and try to recover by finding the correct sound
+      const matchingSound = sounds.find(s => newAudio.src.includes(s.id) || newAudio.src.includes(s.name));
+      if (matchingSound) {
+        console.log(`AudioStateManager: Attempting recovery - found matching sound ${matchingSound.name}`);
+        
+        // Check if this sound is already in our active sounds with a different audio element
+        const existingActiveSound = this.state.activeSounds.find(as => as.sound.id === matchingSound.id);
+        if (existingActiveSound) {
+          console.log(`AudioStateManager: Replacing audio for existing sound ${matchingSound.name}`);
+          
+          // Update the audio reference in activeSounds
+          this.state = {
+            ...this.state,
+            activeSounds: this.state.activeSounds.map(as => {
+              if (as.sound.id === matchingSound.id) {
+                // Ensure the new audio respects the current playing state
+                if (this.state.isPlaying) {
+                  console.log(`AudioStateManager: Ensuring new audio is playing for ${as.sound.name}`);
+                  if (newAudio.paused) {
+                    newAudio.play().catch(e => {
+                      console.error(`AudioStateManager: Failed to play new audio for ${as.sound.name}:`, e);
+                    });
+                  }
+                } else {
+                  console.log(`AudioStateManager: Ensuring new audio is paused for ${as.sound.name}`);
+                  newAudio.pause();
+                }
+                return { ...as, audio: newAudio };
+              }
+              return as;
+            })
+          };
+          
+          // Notify all listeners of state change
+          console.log('AudioStateManager: Notifying listeners of state change after recovery');
+          this.listeners.forEach(listener => listener(this.state));
+          return;
+        }
+      }
+      
+      // If we couldn't recover, log the error and return
+      console.error('AudioStateManager: Could not recover from crossfade error');
       return;
     }
     
@@ -887,6 +976,15 @@ class AudioStateManager {
             if (newAudio.paused) {
               newAudio.play().catch(e => {
                 console.error(`AudioStateManager: Failed to play new audio for ${as.sound.name}:`, e);
+                // Try again after a short delay
+                setTimeout(() => {
+                  if (this.state.isPlaying) {
+                    console.log(`AudioStateManager: Retrying play for ${as.sound.name}`);
+                    newAudio.play().catch(retryErr => {
+                      console.error(`AudioStateManager: Retry play also failed for ${as.sound.name}:`, retryErr);
+                    });
+                  }
+                }, 500);
               });
             }
           } else {
