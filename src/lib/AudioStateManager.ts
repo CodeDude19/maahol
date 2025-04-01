@@ -70,11 +70,16 @@ export const initialAudioState: AudioState = {
 };
 
 // Helper functions
-const createAudioElement = (sound: Sound, volume: number, masterVolume: number): HTMLAudioElement => {
+const createAudioElement = (sound: Sound, volume: number, masterVolume: number, onCrossfade?: (oldAudio: HTMLAudioElement, newAudio: HTMLAudioElement) => void): HTMLAudioElement => {
   const audio = new Audio(sound.audioSrc);
   audio.loop = false; // We'll handle looping with crossfade
   audio.volume = volume * masterVolume;
   audio.preload = 'auto';
+
+  if (onCrossfade) {
+    attachCrossfadeListener(audio, sound, volume, masterVolume, onCrossfade);
+  }
+
   return audio;
 };
 
@@ -185,8 +190,17 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
         const savedState = state.soundStates[sound.id];
         const volume = savedState?.volume ? savedState.volume / 100 : 1;
         
-        // Create new audio element
-        const audio = createAudioElement(sound, volume, state.masterVolume);
+        // Create new audio element with crossfade handler
+        const audio = createAudioElement(sound, volume, state.masterVolume, (oldAudio, newAudio) => {
+          // Update the active sounds array with the new audio element
+          const updatedActiveSounds = state.activeSounds.map(activeSound => {
+            if (activeSound.audio === oldAudio) {
+              return { ...activeSound, audio: newAudio };
+            }
+            return activeSound;
+          });
+          state.activeSounds = updatedActiveSounds;
+        });
         
         // Create new active sound
         const newSound: ActiveSound = {
