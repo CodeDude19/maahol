@@ -59,7 +59,7 @@ const Dashboard: React.FC = () => {
     setMasterVolume, 
     isPlaying, 
     togglePlayPause,
-    isCurrentMixPredefined
+    isCurrentMixSaved
   } = useAudioState();
   
   const isMobile = useIsMobile();
@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
   const [showSaveMixDialog, setShowSaveMixDialog] = useState(false);
   
   // Determine if the save mix button should be disabled
-  const isSaveButtonDisabled = activeSounds.length === 0 || isCurrentMixPredefined();
+  const isSaveButtonDisabled = activeSounds.length === 0 || isCurrentMixSaved();
 
   if (activeSounds.length === 0) {
     return null;

@@ -31,6 +31,7 @@ interface AudioContextType {
   saveCustomMix: (mix: SoundMix) => void;
   getCustomMixes: () => SoundMix[];
   isCurrentMixPredefined: () => boolean;
+  isCurrentMixSaved: () => boolean;
 }
 
 const AudioStateContext = createContext<AudioContextType | undefined>(undefined);
@@ -178,12 +179,12 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return audioStateManager.getCustomMixes();
   };
 
-  // Check if current mix matches any predefined mix
-  const isCurrentMixPredefined = (): boolean => {
+  // Check if current mix matches any predefined or custom mix
+  const isCurrentMixSaved = (): boolean => {
     if (audioState.activeSounds.length === 0) return false;
     
-    // For each predefined mix, check if it matches the current active sounds
-    return soundMixes.some(mix => {
+    // Helper function to check if a mix matches the current active sounds
+    const doesMixMatch = (mix: SoundMix): boolean => {
       // If the number of sounds doesn't match, it's not the same mix
       if (mix.sounds.length !== audioState.activeSounds.length) return false;
       
@@ -195,8 +196,18 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Compare volumes with a small tolerance for floating point differences
         return Math.abs(activeSound.volume - mixSound.volume) < 0.01;
       });
-    });
+    };
+    
+    // Check against predefined mixes
+    if (soundMixes.some(doesMixMatch)) return true;
+    
+    // Check against custom mixes
+    const customMixes = audioStateManager.getCustomMixes();
+    return customMixes.some(doesMixMatch);
   };
+  
+  // Alias for backward compatibility
+  const isCurrentMixPredefined = isCurrentMixSaved;
 
   const contextValue: AudioContextType = {
     activeSounds: audioState.activeSounds,
@@ -217,7 +228,8 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     applyMix,
     saveCustomMix,
     getCustomMixes,
-    isCurrentMixPredefined
+    isCurrentMixPredefined,
+    isCurrentMixSaved
   };
 
   return (
