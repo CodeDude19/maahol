@@ -29,6 +29,7 @@ interface AudioContextType {
   playAllActiveSounds: () => void;
   applyMix: (mix: SoundMix) => void;
   saveCustomMix: (mix: SoundMix) => void;
+  deleteCustomMix: (mixName: string) => void;
   getCustomMixes: () => SoundMix[];
   isCurrentMixPredefined: () => boolean;
   isCurrentMixSaved: () => boolean;
@@ -209,6 +210,15 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   // Alias for backward compatibility
   const isCurrentMixPredefined = isCurrentMixSaved;
 
+  const deleteCustomMix = (mixName: string) => {
+    audioStateManager.deleteCustomMix(mixName);
+    
+    toast({
+      title: "Mix Deleted",
+      description: `${mixName} has been removed from your custom mixes`,
+    });
+  };
+
   const contextValue: AudioContextType = {
     activeSounds: audioState.activeSounds,
     masterVolume: audioState.masterVolume,
@@ -227,6 +237,7 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     playAllActiveSounds,
     applyMix,
     saveCustomMix,
+    deleteCustomMix,
     getCustomMixes,
     isCurrentMixPredefined,
     isCurrentMixSaved

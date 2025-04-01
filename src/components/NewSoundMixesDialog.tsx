@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAudioState } from "@/contexts/AudioStateContext";
@@ -8,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { getLuminosity } from "@/lib/color";
 import { SoundMix } from "@/lib/AudioStateManager";
+import { X } from "lucide-react";
 
 import { soundMixes } from "@/data/soundMixes";
 
@@ -18,16 +19,30 @@ interface SoundMixesDialogProps {
 }
 
 const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChange }) => {
-  const { applyMix, getCustomMixes } = useAudioState();
+  const { applyMix, getCustomMixes, deleteCustomMix } = useAudioState();
   const isMobile = useIsMobile();
   
-  // Get custom mixes
-  const customMixes = getCustomMixes();
+  // Add state to track when mixes are updated
+  const [mixesUpdated, setMixesUpdated] = useState(0);
+  // Add state to store custom mixes
+  const [customMixes, setCustomMixes] = useState<SoundMix[]>([]);
+  
+  // Use effect to refresh custom mixes when mixesUpdated changes
+  useEffect(() => {
+    setCustomMixes(getCustomMixes());
+  }, [getCustomMixes, mixesUpdated]);
 
   const handleApplyMix = (mix: SoundMix) => {
     // Using the new applyMix function from AudioStateContext
     applyMix(mix);
     onOpenChange(false);
+  };
+  
+  const handleDeleteMix = (e: React.MouseEvent, mixName: string) => {
+    e.stopPropagation(); // Prevent triggering the parent button click
+    deleteCustomMix(mixName);
+    // Increment counter to trigger re-render and refresh the custom mixes list
+    setMixesUpdated(prev => prev + 1);
   };
 
   return (
@@ -130,9 +145,16 @@ const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChan
                   >
                     <Button
                       variant="outline"
-                      className="w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 hover:bg-white/10 transition-colors overflow-visible"
+                      className="w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 hover:bg-white/10 transition-colors overflow-visible relative"
                       onClick={() => handleApplyMix(mix)}
                     >
+                      <button 
+                        className="absolute top-2 right-2 p-1 rounded-full bg-black/40 hover:bg-black/60 text-white/70 hover:text-white transition-colors z-10"
+                        onClick={(e) => handleDeleteMix(e, mix.name)}
+                        aria-label="Delete mix"
+                      >
+                        <X size={14} />
+                      </button>
                       <div className="w-full text-left pr-2">
                         <span className="text-base font-medium text-white block">{mix.name}</span>
                         

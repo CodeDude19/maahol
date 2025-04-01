@@ -839,6 +839,14 @@ class AudioStateManager {
     return [...this.customMixes];
   }
   
+  public deleteCustomMix(mixName: string) {
+    const index = this.customMixes.findIndex(mix => mix.name === mixName);
+    if (index !== -1) {
+      this.customMixes.splice(index, 1);
+      this.saveCustomMixesToStorage();
+    }
+  }
+  
   // Cleanup
   public cleanup() {
     // Stop all active sounds
