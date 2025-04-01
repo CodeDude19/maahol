@@ -72,11 +72,14 @@ export const initialAudioState: AudioState = {
 // Helper functions
 const createAudioElement = (sound: Sound, volume: number, masterVolume: number, onCrossfade?: (oldAudio: HTMLAudioElement, newAudio: HTMLAudioElement) => void): HTMLAudioElement => {
   const audio = new Audio(sound.audioSrc);
-  audio.loop = false; // We'll handle looping with crossfade
+  // We set loop to false because we're implementing our own crossfade-based looping
+  // This provides a smoother transition between loops than the native loop property
+  audio.loop = false;
   audio.volume = volume * masterVolume;
   audio.preload = 'auto';
 
   if (onCrossfade) {
+    // Attach listener that will handle the crossfade looping
     attachCrossfadeListener(audio, sound, volume, masterVolume, onCrossfade);
   }
 
@@ -97,21 +100,49 @@ const attachCrossfadeListener = (
     if ((audio as any)._crossfadeTriggered) return;
     if (!audio.duration || audio.duration === Infinity) return;
     
+    // Start crossfade 3 seconds before the end of the track
     if (audio.currentTime >= audio.duration - 3) {
+      console.log(`Starting crossfade for ${sound.name}, duration: ${audio.duration}, current time: ${audio.currentTime}`);
       (audio as any)._crossfadeTriggered = true;
       
       // Create a new audio element for the same sound
       const newAudio = new Audio(sound.audioSrc);
-      newAudio.loop = false;
+      newAudio.loop = false; // We'll handle looping with our crossfade mechanism
       newAudio.preload = "auto";
-      newAudio.volume = 0;
+      newAudio.volume = 0; // Start with zero volume for crossfade
+      
+      // Store the current playing state to apply to the new audio
+      const isCurrentlyPlaying = !audio.paused;
+      console.log(`Current playing state: ${isCurrentlyPlaying}`);
       
       // Attach the crossfade listener for future loops
       attachCrossfadeListener(newAudio, sound, volume, masterVolume, onCrossfade);
       
-      newAudio.play().catch(e => {
-        console.error("Crossfade new audio play failed:", e);
-      });
+      // Ensure the audio source is valid before playing
+      if (isCurrentlyPlaying && sound.audioSrc) {
+        // Preload the audio
+        newAudio.load();
+        console.log(`Loading new audio for ${sound.name}`);
+        
+        // Add event listener for when the audio is ready to play
+        newAudio.addEventListener('canplaythrough', () => {
+          // Only check if currently playing, don't check newAudio.paused as it might be misleading
+          if (isCurrentlyPlaying) {
+            console.log(`Playing new audio for ${sound.name} after canplaythrough event`);
+            newAudio.play().catch(e => {
+              console.error("Crossfade new audio play failed:", e);
+            });
+          }
+        }, { once: true });
+        
+        // Also try to play directly, which will work if the audio is already loaded
+        console.log(`Attempting to play new audio for ${sound.name} immediately`);
+        newAudio.play().catch(e => {
+          // This is expected to fail sometimes if the audio isn't loaded yet
+          // The canplaythrough event will handle it
+          console.log(`Initial play attempt for ${sound.name} failed, waiting for canplaythrough event`, e);
+        });
+      }
       
       const fadeDuration = 3000; // 3 seconds in ms
       const fadeSteps = 60; // number of steps for the fade
@@ -121,6 +152,19 @@ const attachCrossfadeListener = (
       
       let currentStep = 0;
       const fadeInterval = setInterval(() => {
+        // Check if audio was paused during crossfade
+        if (!isCurrentlyPlaying || audio.paused) {
+          // If paused during crossfade, also pause the new audio
+          newAudio.pause();
+          clearInterval(fadeInterval);
+          audio.pause();
+          audio.src = "";
+          // Notify the state manager to update the audio reference
+          console.log(`Crossfade interrupted for ${sound.name}, updating audio reference`);
+          onCrossfade(audio, newAudio);
+          return;
+        }
+        
         currentStep++;
         const progress = currentStep / fadeSteps;
         // Use quadratic easing for a smoother transition
@@ -139,6 +183,7 @@ const attachCrossfadeListener = (
           newAudio.volume = targetVolume;
           
           // Notify the state manager to update the audio reference
+          console.log(`Crossfade complete for ${sound.name}, updating audio reference`);
           onCrossfade(audio, newAudio);
         }
       }, stepInterval);
@@ -192,14 +237,9 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
         
         // Create new audio element with crossfade handler
         const audio = createAudioElement(sound, volume, state.masterVolume, (oldAudio, newAudio) => {
-          // Update the active sounds array with the new audio element
-          const updatedActiveSounds = state.activeSounds.map(activeSound => {
-            if (activeSound.audio === oldAudio) {
-              return { ...activeSound, audio: newAudio };
-            }
-            return activeSound;
-          });
-          state.activeSounds = updatedActiveSounds;
+          // We need to use the audioStateManager's handleCrossfade method
+          // to properly update the state with the new audio element
+          audioStateManager.handleCrossfade(oldAudio, newAudio);
         });
         
         // Create new active sound
@@ -293,12 +333,31 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
       const newIsPlaying = !state.isPlaying;
       
       // Update all active sounds' play state
-      state.activeSounds.forEach(({ audio }) => {
+      state.activeSounds.forEach(({ audio, sound }) => {
         if (newIsPlaying) {
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(e => {
-              console.error("Audio play failed:", e);
+          // Check if the audio element has a valid source
+          if (sound && sound.audioSrc && audio.src) {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(e => {
+                console.error("Audio play failed:", e);
+                // If playback fails due to no source, try to reset the source and play again
+                if (e.name === "NotSupportedError" && sound.audioSrc) {
+                  console.log("Attempting to reset audio source and play again");
+                  audio.src = sound.audioSrc;
+                  audio.load();
+                  audio.play().catch(innerErr => {
+                    console.error("Retry play failed:", innerErr);
+                  });
+                }
+              });
+            }
+          } else if (sound && sound.audioSrc) {
+            // If audio.src is empty but we have sound.audioSrc, try to set it
+            audio.src = sound.audioSrc;
+            audio.load();
+            audio.play().catch(e => {
+              console.error("Audio play failed after source reset:", e);
             });
           }
         } else {
@@ -404,11 +463,30 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
     
     case 'PLAY_ALL_SOUNDS': {
       // Play all active sounds
-      state.activeSounds.forEach(({ audio }) => {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error("Audio play failed:", e);
+      state.activeSounds.forEach(({ audio, sound }) => {
+        // Check if the audio element has a valid source
+        if (sound && sound.audioSrc && audio.src) {
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(e => {
+              console.error("Audio play failed:", e);
+              // If playback fails due to no source, try to reset the source and play again
+              if (e.name === "NotSupportedError" && sound.audioSrc) {
+                console.log("Attempting to reset audio source and play again");
+                audio.src = sound.audioSrc;
+                audio.load();
+                audio.play().catch(innerErr => {
+                  console.error("Retry play failed:", innerErr);
+                });
+              }
+            });
+          }
+        } else if (sound && sound.audioSrc) {
+          // If audio.src is empty but we have sound.audioSrc, try to set it
+          audio.src = sound.audioSrc;
+          audio.load();
+          audio.play().catch(e => {
+            console.error("Audio play failed after source reset:", e);
           });
         }
       });
@@ -778,18 +856,43 @@ class AudioStateManager {
   
   // Handle crossfade
   public handleCrossfade(oldAudio: HTMLAudioElement, newAudio: HTMLAudioElement) {
+    console.log('AudioStateManager: handleCrossfade called');
+    
+    // Find the active sound that uses the old audio element
+    const activeSound = this.state.activeSounds.find(as => as.audio === oldAudio);
+    if (!activeSound) {
+      console.error('AudioStateManager: Could not find active sound with the old audio element');
+      return;
+    }
+    
+    console.log(`AudioStateManager: Replacing audio for ${activeSound.sound.name}`);
+    
     // Update the audio reference in activeSounds
     this.state = {
       ...this.state,
-      activeSounds: this.state.activeSounds.map(activeSound => {
-        if (activeSound.audio === oldAudio) {
-          return { ...activeSound, audio: newAudio };
+      activeSounds: this.state.activeSounds.map(as => {
+        if (as.audio === oldAudio) {
+          // Ensure the new audio respects the current playing state
+          if (this.state.isPlaying) {
+            console.log(`AudioStateManager: Ensuring new audio is playing for ${as.sound.name}`);
+            // Make sure the new audio is playing if the state is playing
+            if (newAudio.paused) {
+              newAudio.play().catch(e => {
+                console.error(`AudioStateManager: Failed to play new audio for ${as.sound.name}:`, e);
+              });
+            }
+          } else {
+            console.log(`AudioStateManager: Ensuring new audio is paused for ${as.sound.name}`);
+            newAudio.pause();
+          }
+          return { ...as, audio: newAudio };
         }
-        return activeSound;
+        return as;
       })
     };
     
     // Notify all listeners of state change
+    console.log('AudioStateManager: Notifying listeners of state change');
     this.listeners.forEach(listener => listener(this.state));
   }
 }
