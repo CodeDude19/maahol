@@ -27,10 +27,12 @@ const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChan
   // Add state to store custom mixes
   const [customMixes, setCustomMixes] = useState<SoundMix[]>([]);
   
-  // Use effect to refresh custom mixes when mixesUpdated changes
+  // Use effect to refresh custom mixes when mixesUpdated changes or when dialog opens
   useEffect(() => {
-    setCustomMixes(getCustomMixes());
-  }, [getCustomMixes, mixesUpdated]);
+    if (open) {
+      setCustomMixes(getCustomMixes());
+    }
+  }, [getCustomMixes, mixesUpdated, open]);
 
   const handleApplyMix = (mix: SoundMix) => {
     // Using the new applyMix function from AudioStateContext
