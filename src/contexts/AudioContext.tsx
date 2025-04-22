@@ -88,29 +88,56 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [initializeAudioContext]);
 
-  // Initialize audio context to prevent safari auto-play issues
+  // Initialize audio context to prevent auto-play issues across browsers
   useEffect(() => {
-    // Create a silent audio context to unlock audio on iOS
-    const unlockAudio = () => {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const silentBuffer = audioContext.createBuffer(1, 1, 22050);
-      const source = audioContext.createBufferSource();
-      source.buffer = silentBuffer;
-      source.connect(audioContext.destination);
-      source.start(0);
-      
-      document.removeEventListener('touchstart', unlockAudio);
-      document.removeEventListener('click', unlockAudio);
+    // Create a silent audio context to unlock audio
+    const unlockAudio = async () => {
+      try {
+        // Initialize AudioContext if it doesn't exist
+        if (!audioContext) {
+          const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+          setAudioContext(ctx);
+          
+          // Some browsers require manual resume after creation
+          if (ctx.state === 'suspended') {
+            await ctx.resume();
+          }
+        } else if (audioContext.state === 'suspended') {
+          // Resume if suspended
+          await audioContext.resume();
+        }
+        
+        // Create and play a silent sound (needed for some browsers)
+        const silentBuffer = audioContext?.createBuffer(1, 1, 22050) || 
+                            new (window.AudioContext || (window as any).webkitAudioContext)().createBuffer(1, 1, 22050);
+        const source = audioContext?.createBufferSource() || 
+                      new (window.AudioContext || (window as any).webkitAudioContext)().createBufferSource();
+        source.buffer = silentBuffer;
+        source.connect((audioContext || new (window.AudioContext || (window as any).webkitAudioContext)()).destination);
+        source.start(0);
+        
+        console.log("Audio context unlocked:", audioContext?.state || "No context");
+        
+        // Remove event listeners after successful unlock
+        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+      } catch (err) {
+        console.error("Error unlocking audio context:", err);
+      }
     };
     
+    // Listen for various user interactions
     document.addEventListener('touchstart', unlockAudio, false);
     document.addEventListener('click', unlockAudio, false);
+    document.addEventListener('keydown', unlockAudio, false); // Also listen for keyboard events
     
     return () => {
       document.removeEventListener('touchstart', unlockAudio);
       document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('keydown', unlockAudio);
     };
-  }, []);
+  }, [audioContext]);
 
   // Load saved state on initial mount
   useEffect(() => {
@@ -167,20 +194,50 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [audioState]);
 
   // Handle play/pause for all active sounds
-  const updatePlayState = useCallback((shouldPlay: boolean) => {
+  const updatePlayState = useCallback(async (shouldPlay: boolean) => {
+    // First ensure audio context is running if needed
+    if (shouldPlay && audioContext?.state === 'suspended') {
+      try {
+        console.log("Resuming audio context in updatePlayState");
+        await audioContext.resume();
+        // Small delay to ensure context is fully active
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (e) {
+        console.error("Failed to resume audio context:", e);
+      }
+    }
+    
     // Update all active sounds' play state
-    activeSounds.forEach(({ audio }) => {
+    for (const { audio, sound } of activeSounds) {
       if (shouldPlay) {
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(e => {
-            console.error("Audio play failed:", e);
-          });
+        try {
+          // We use explicit async/await pattern for better error handling
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            await playPromise
+              .then(() => {
+                // Get current local system time for resumed sound
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                  hour: 'numeric', 
+                  minute: '2-digit', 
+                  second: '2-digit', 
+                  hour12: true 
+                });
+                
+                console.log(`Sound "${sound.name}" resumed at ${timeString}`);
+              })
+              .catch(e => {
+                console.error(`Audio play failed for ${sound.name}:`, e);
+              });
+          }
+        } catch (e) {
+          console.error(`Error playing sound ${sound.name}:`, e);
         }
       } else {
         audio.pause();
       }
-    });
+    }
 
     // Update global playing state
     setIsPlaying(shouldPlay && activeSounds.length > 0);
@@ -221,6 +278,25 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     newAudio.loop = false;
     newAudio.preload = "auto";
     newAudio.volume = 0;
+    
+    // Log crossfade time and duration when metadata is loaded
+    newAudio.addEventListener('loadedmetadata', () => {
+      const duration = newAudio.duration;
+      const minutes = Math.floor(duration / 60);
+      const seconds = Math.floor(duration % 60);
+      
+      // Get current local system time
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+      });
+      
+      console.log(`Sound "${sound.name}" crossfade at ${timeString} - Duration: ${minutes}m ${seconds}s`);
+    });
+    
     // Attach the crossfade listener for future loops
     attachCrossfadeListener(newAudio, sound, volume);
 
@@ -231,10 +307,32 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Fix: Ensure we never exceed the intended volume during crossfade
     // The sum of old and new volumes should always equal the original volume
     
-    // Start playing the new audio silently
-    newAudio.play().catch(e => {
-      console.error("Crossfade new audio play failed:", e);
-    });
+    // Start playing the new audio silently, but first make sure the audio context is running
+    (async () => {
+      try {
+        // Resume audio context if it's suspended
+        if (audioContext?.state === 'suspended') {
+          console.log("Resuming audio context for crossfade");
+          await audioContext.resume();
+          await new Promise(resolve => setTimeout(resolve, 50)); // Small delay
+        }
+        
+        await newAudio.play();
+        
+        // Get current local system time for crossfade
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit', 
+          second: '2-digit', 
+          hour12: true 
+        });
+        
+        console.log(`Sound "${sound.name}" crossfade started playing at ${timeString}`);
+      } catch (e) {
+        console.error("Crossfade new audio play failed:", e);
+      }
+    })();
 
     const fadeDuration = 3000; // 3 seconds in ms
     const fadeSteps = 60; // number of steps for the fade (adjustable)
@@ -261,14 +359,20 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Ensure the new audio uses the correct target volume after fade completes
         newAudio.volume = originalVolume;
         
-        setActiveSounds(prev =>
-          prev.map(asound => {
-            if (asound.audio === oldAudio) {
-              return { ...asound, audio: newAudio };
-            }
-            return asound;
-          })
-        );
+        // Filter out any duplicates and ensure a clean replacement
+        setActiveSounds(prev => {
+          // Remove the old audio instance
+          const filtered = prev.filter(asound => asound.audio !== oldAudio);
+          
+          // Find the original item to replace
+          const itemToReplace = prev.find(asound => asound.audio === oldAudio);
+          
+          if (itemToReplace) {
+            // Add the updated item with the new audio
+            return [...filtered, { ...itemToReplace, audio: newAudio }];
+          }
+          return prev; // Fallback if no match found
+        });
       }
     }, stepInterval);
   }, [masterVolume, attachCrossfadeListener]);
@@ -330,6 +434,24 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // For Safari: preload the audio
         audio.preload = 'auto';
         
+        // Log sound duration and start time when metadata is loaded
+        audio.addEventListener('loadedmetadata', () => {
+          const duration = audio.duration;
+          const minutes = Math.floor(duration / 60);
+          const seconds = Math.floor(duration % 60);
+          
+          // Get current local system time
+          const now = new Date();
+          const timeString = now.toLocaleTimeString('en-US', { 
+            hour: 'numeric', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true 
+          });
+          
+          console.log(`Sound "${sound.name}" started at ${timeString} - Duration: ${minutes}m ${seconds}s`);
+        });
+        
         // Attach crossfade listener for seamless looping
         attachCrossfadeListener(audio, sound, volume);
         
@@ -366,9 +488,23 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 await audioContext.resume();
               }
               
+              // Ensure audio context is running
+              if (audioContext?.state === 'suspended') {
+                try {
+                  await audioContext.resume();
+                  console.log("Audio context resumed before playback");
+                } catch (e) {
+                  console.warn("Failed to resume audio context:", e);
+                }
+              }
+              
+              // Create a slight delay before playing to ensure the audio context is ready
+              await new Promise(resolve => setTimeout(resolve, 50));
+              
               const playPromise = audio.play();
               if (playPromise !== undefined) {
                 await playPromise;
+                console.log(`Successfully started playback for ${sound.name}`);
               }
             } catch (e) {
               console.error("Failed to play audio:", e);
@@ -384,9 +520,35 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } else if (activeSounds.length === 0) {
           // Special case: if it's the very first sound, let's start playing
           setIsPlaying(true);
-          audio.play().catch(e => {
-            console.error("Failed to play audio:", e);
-          });
+          
+          // Try to resume audio context first
+          if (audioContext?.state === 'suspended') {
+            try {
+              audioContext.resume()
+                .then(() => {
+                  console.log("Audio context resumed for first sound");
+                  // Add a small delay to ensure context is ready
+                  setTimeout(() => {
+                    audio.play()
+                      .then(() => console.log(`First sound ${sound.name} started successfully`))
+                      .catch(e => console.error("Failed to play first audio:", e));
+                  }, 50);
+                });
+            } catch (e) {
+              console.error("Error resuming audio context:", e);
+              // Try playing anyway
+              audio.play().catch(e => {
+                console.error("Failed to play audio after context resume error:", e);
+              });
+            }
+          } else {
+            // Context is running or not available, try playing directly
+            audio.play()
+              .then(() => console.log(`First sound ${sound.name} started successfully`))
+              .catch(e => {
+                console.error("Failed to play audio:", e);
+              });
+          }
           
           // Update audioState to reflect that this sound is playing
           setAudioState(prev => {

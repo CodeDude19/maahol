@@ -83,9 +83,9 @@ const Dashboard: React.FC = () => {
           <div className="space-y-4 py-2">
             {activeSounds.length > 0 ? (
               <div className="space-y-4">
-                {activeSounds.map(({ sound, volume }) => (
+                {activeSounds.map(({ sound, volume }, index) => (
                   <VolumeSlider 
-                    key={sound.id} 
+                    key={`${sound.id}-${index}`}
                     sound={sound} 
                     volume={volume}
                   />
