@@ -1,8 +1,8 @@
+// audiostatecontext.tsx
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Sound } from '@/data/sounds';
 import { toast } from '@/hooks/use-toast';
 import { soundMixes } from '@/data/soundMixes';
-
 import {
   audioStateManager,
   AudioState,
@@ -40,13 +40,16 @@ const AudioStateContext = createContext<AudioContextType | undefined>(undefined)
 export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [audioState, setAudioState] = useState<AudioState>(audioStateManager.getState());
 
-  // Subscribe to state changes
+  // Subscribe to state changes from the AudioStateManager
   useEffect(() => {
     const unsubscribe = audioStateManager.subscribe(newState => {
-      setAudioState(newState);
+      setAudioState(prevState => ({ ...prevState, ...newState }));
     });
+    
+    // Sync initial state
+    setAudioState(audioStateManager.getState());
 
-    // Initialize audio context to prevent safari auto-play issues
+    // Unlock audio context for mobile (prevents Safari autoplay issues)
     const unlockAudio = () => {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const silentBuffer = audioContext.createBuffer(1, 1, 22050);
@@ -74,7 +77,7 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const toggleSound = (sound: Sound) => {
     const isActive = audioState.activeSounds.some(as => as.sound.id === sound.id);
     
-    // If not active and we already have 3 sounds, show toast and don't add
+    // If not active and already three sounds are active, show a toast and do nothing.
     if (!isActive && audioState.activeSounds.length >= 3) {
       toast({
         description: "Three create harmony, above 3 maahol is Chaos!",
@@ -118,7 +121,7 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       return;
     }
     
-    // Calculate minutes based on option
+    // Calculate minutes based on the timer option.
     let minutes = 0;
     switch (timer) {
       case "5min": minutes = 5; break;
@@ -145,8 +148,9 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
+  // updateVolume converts 0-100 scale to 0-1 and delegates to the state manager
   const updateVolume = (soundId: string, volume: number) => {
-    audioStateManager.setVolumeForSound(soundId, volume / 100); // Convert from 0-100 to 0-1
+    audioStateManager.setVolumeForSound(soundId, volume / 100);
   };
 
   const pauseAllSounds = () => {
@@ -180,34 +184,29 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return audioStateManager.getCustomMixes();
   };
 
-  // Check if current mix matches any predefined or custom mix
+  // Check if the current active sounds match any predefined or saved mix.
   const isCurrentMixSaved = (): boolean => {
     if (audioState.activeSounds.length === 0) return false;
     
-    // Helper function to check if a mix matches the current active sounds
+    // Helper to check if a mix matches current active sounds.
     const doesMixMatch = (mix: SoundMix): boolean => {
-      // If the number of sounds doesn't match, it's not the same mix
       if (mix.sounds.length !== audioState.activeSounds.length) return false;
-      
-      // Check if all sounds in the mix are in the active sounds with the same volume
       return mix.sounds.every(mixSound => {
         const activeSound = audioState.activeSounds.find(as => as.sound.id === mixSound.id);
         if (!activeSound) return false;
-        
-        // Compare volumes with a small tolerance for floating point differences
         return Math.abs(activeSound.volume - mixSound.volume) < 0.01;
       });
     };
     
-    // Check against predefined mixes
+    // Check against predefined mixes.
     if (soundMixes.some(doesMixMatch)) return true;
     
-    // Check against custom mixes
+    // Check against custom mixes.
     const customMixes = audioStateManager.getCustomMixes();
     return customMixes.some(doesMixMatch);
   };
   
-  // Alias for backward compatibility
+  // Alias for backward compatibility.
   const isCurrentMixPredefined = isCurrentMixSaved;
 
   const deleteCustomMix = (mixName: string) => {

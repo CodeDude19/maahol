@@ -22,7 +22,8 @@ const getAudioSrc = (soundName: string): string => {
   return `/maahol/sounds/${soundName}.${format}`;
 };
 
-export const sounds: Sound[] = [
+// Define regular sounds
+const regularSounds: Sound[] = [
   {
     id: 'beach',
     name: 'Beach',
@@ -193,5 +194,21 @@ export const sounds: Sound[] = [
     category: 'ambience',
     iconPath: '/maahol/images/Train-W.png',
     color: '#FFFF00',
-  }
+  },
 ];
+
+// Debug sound - only available in development mode
+const debugSound: Sound = {
+  id: 'Debug',
+  name: 'Debug',
+  description: 'Debugging sounds',
+  audioSrc: getAudioSrc('debug'),
+  category: 'ambience',
+  iconPath: '/maahol/images/Debug-W.png',
+  color: '#FFFF00',
+};
+
+// Export sounds based on environment
+export const sounds: Sound[] = import.meta.env.DEV 
+  ? [...regularSounds, debugSound] 
+  : regularSounds;

@@ -150,13 +150,13 @@ const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChan
                       className="w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 hover:bg-white/10 transition-colors overflow-visible relative"
                       onClick={() => handleApplyMix(mix)}
                     >
-                      <button 
-                        className="absolute top-2 right-2 p-1 rounded-full bg-black/40 hover:bg-black/60 text-white/70 hover:text-white transition-colors z-10"
+                      <div 
+                        className="absolute top-2 right-2 p-1 rounded-full bg-black/40 hover:bg-black/60 text-white/70 hover:text-white transition-colors z-10 cursor-pointer"
                         onClick={(e) => handleDeleteMix(e, mix.name)}
                         aria-label="Delete mix"
                       >
                         <X size={14} />
-                      </button>
+                      </div>
                       <div className="w-full text-left pr-2">
                         <span className="text-base font-medium text-white block">{mix.name}</span>
                         
