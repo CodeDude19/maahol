@@ -43,7 +43,7 @@ const AppBar: React.FC<AppBarProps> = ({ selectedCategory, setSelectedCategory, 
               <h1 className="text-2xl font-medium tracking-tight flex items-center">
                 <img src="/maahol/images/Maahol.png" alt="Maahol icon" className="w-8 h-8 mr-2 rounded-full" style={{boxShadow: '0 0 30px rgba(16, 185, 129, 0.9), 0 0 50px rgba(16, 185, 129, 0.7)', clipPath: 'circle(50% at 50% 50%)', filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))'}} />
                 <span className="text-white mr-2">Maahol</span> 
-                <span className="text-gray-400 text-xs mt-1">v1.3</span>
+                <span className="text-gray-400 text-xs mt-1">v1.4</span>
               </h1>
               
               <div className="w-8 h-8 relative flex items-center justify-center">
