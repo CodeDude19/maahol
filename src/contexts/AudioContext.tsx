@@ -224,6 +224,14 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Attach the crossfade listener for future loops
     attachCrossfadeListener(newAudio, sound, volume);
 
+    // Store the exact current volume to ensure we maintain it throughout the transition
+    const originalVolume = oldAudio.volume;
+    const targetVolume = volume * masterVolume; // Final target volume
+    
+    // Fix: Ensure we never exceed the intended volume during crossfade
+    // The sum of old and new volumes should always equal the original volume
+    
+    // Start playing the new audio silently
     newAudio.play().catch(e => {
       console.error("Crossfade new audio play failed:", e);
     });
@@ -231,25 +239,28 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fadeDuration = 3000; // 3 seconds in ms
     const fadeSteps = 60; // number of steps for the fade (adjustable)
     const stepInterval = fadeDuration / fadeSteps;
-    const oldInitialVolume = oldAudio.volume;
-    const targetVolume = volume * masterVolume; // current masterVolume
 
     let currentStep = 0;
     const fadeInterval = setInterval(() => {
       currentStep++;
       const progress = currentStep / fadeSteps;
-      // Use quadratic easing for a smoother transition
-      const easedProgress = progress * progress;
-      const newVol = targetVolume * easedProgress;
-      const oldVol = oldInitialVolume * (1 - easedProgress);
+      
+      // Use linear fading to prevent volume spikes
+      // Important: The sum of volumes always equals the original volume
+      const newVol = originalVolume * progress;
+      const oldVol = originalVolume * (1 - progress);
+      
       oldAudio.volume = oldVol;
       newAudio.volume = newVol;
+      
       if (currentStep >= fadeSteps) {
         clearInterval(fadeInterval);
         oldAudio.pause();
         oldAudio.src = "";
-        // Ensure the new audio ends at the exact target volume
-        newAudio.volume = targetVolume;
+        
+        // Ensure the new audio uses the correct target volume after fade completes
+        newAudio.volume = originalVolume;
+        
         setActiveSounds(prev =>
           prev.map(asound => {
             if (asound.audio === oldAudio) {
