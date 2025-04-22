@@ -148,8 +148,12 @@ const attachCrossfadeListener = (
       const isCurrentlyPlaying = !audio.paused;
       console.log(`Current playing state: ${isCurrentlyPlaying}`);
       
-      // Attach the crossfade listener for future loops
-      attachCrossfadeListener(newAudio, sound, volume, masterVolume, onCrossfade);
+      // Save the current volume to properly transition to in the new audio
+      // This is critical for when volume has been changed after the audio started playing
+      const audioVolume = audio.volume / masterVolume; // Convert back to 0-1 scale independent of master volume
+      
+      // Attach the crossfade listener for future loops with the current volume
+      attachCrossfadeListener(newAudio, sound, audioVolume, masterVolume, onCrossfade);
       
       // Ensure the audio source is valid before playing
       if (isCurrentlyPlaying && sound.audioSrc) {
@@ -190,7 +194,9 @@ const attachCrossfadeListener = (
       const fadeSteps = 60; // number of steps for the fade
       const stepInterval = fadeDuration / fadeSteps;
       const oldInitialVolume = audio.volume;
-      const targetVolume = volume * masterVolume;
+      // Use the current audio volume as the target volume instead of the original volume
+      // This is important when volume has been modified after the sound started playing
+      const targetVolume = audio.volume; // Simply use the current volume directly
       
       let currentStep = 0;
       const fadeInterval = setInterval(() => {
@@ -559,6 +565,8 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
       const { mix } = action;
       const { sounds: mixSounds } = mix;
       
+      console.log(`AudioStateManager: Starting to apply mix: ${mix.name}`);
+      
       // Create a map of current active sounds for quick lookup
       const currentActiveSoundMap = new Map();
       state.activeSounds.forEach(as => {
@@ -579,14 +587,25 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
         }
       });
       
-      // Remove sounds that are not in the mix
+      // Process in series, first removing sounds that are not in the mix
       let newActiveSounds = [...state.activeSounds];
       let newSoundStates = { ...state.soundStates };
       
+      // Remove sounds that are not in the mix
       soundsToRemove.forEach(activeSound => {
         const { sound, audio } = activeSound;
+        
+        console.log(`AudioStateManager: Removing sound ${sound.name} that is not in the mix`);
+        
+        // First pause the audio
         audio.pause();
-        audio.src = "";
+        
+        // Then clear the source
+        try {
+          audio.src = "";
+        } catch (e) {
+          console.log(`AudioStateManager: Minor error clearing audio src for ${sound.name}:`, e);
+        }
         
         // Remove from active sounds
         newActiveSounds = newActiveSounds.filter(as => as.sound.id !== sound.id);
@@ -595,16 +614,51 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
         delete newSoundStates[sound.id];
       });
       
-      // Process sounds in the mix
-      mixSounds.forEach(({ id, volume }) => {
+      // Process sounds in the mix - add one at a time with a small delay to prevent overloading
+      let index = 0;
+      for (const { id, volume } of mixSounds) {
         const normalizedVolume = volume; // Assuming volume is already 0-1
         
         if (currentActiveSoundMap.has(id)) {
           // Update volume for existing sound
           newActiveSounds = newActiveSounds.map(activeSound => {
             if (activeSound.sound.id === id) {
-              activeSound.audio.volume = normalizedVolume * state.masterVolume;
-              return { ...activeSound, volume: normalizedVolume };
+              // Check if we need to create a new audio element with proper crossfade for volume changes
+              if ((activeSound.audio as any)._crossfadeTriggered === undefined) {
+                // If no crossfade handler is attached, create a new audio element with one
+                console.log(`Recreating audio element for ${activeSound.sound.name} with crossfade handler`);
+                
+                // Store the current playing state
+                const wasPlaying = !activeSound.audio.paused;
+                
+                // Pause the old audio
+                activeSound.audio.pause();
+                
+                // Create new audio element with crossfade handler
+                const newAudio = createAudioElement(activeSound.sound, normalizedVolume, state.masterVolume, (oldAudio, newAudio) => {
+                  audioStateManager.handleCrossfade(oldAudio, newAudio);
+                });
+                
+                // Set the current time and playing state to match the previous audio
+                if (activeSound.audio.currentTime) {
+                  newAudio.currentTime = activeSound.audio.currentTime;
+                }
+                
+                // Play the new audio if the old one was playing
+                if (wasPlaying && state.isPlaying) {
+                  setTimeout(() => {
+                    newAudio.play().catch(e => {
+                      console.error(`Failed to play recreated audio for ${activeSound.sound.name}:`, e);
+                    });
+                  }, 300 * index); // Stagger playback
+                }
+                
+                return { ...activeSound, audio: newAudio, volume: normalizedVolume };
+              } else {
+                // If crossfade handler exists, just update the volume
+                activeSound.audio.volume = normalizedVolume * state.masterVolume;
+                return { ...activeSound, volume: normalizedVolume };
+              }
             }
             return activeSound;
           });
@@ -615,16 +669,21 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
             volume: normalizedVolume * 100 // Convert to 0-100 scale for storage
           };
         } else {
-          // Add new sound from the mix
-          const soundData = mixSounds.find(s => s.id === id);
-          if (!soundData) return;
-          
           // Find the sound object
           const sound = sounds.find(s => s.id === id);
-          if (!sound) return;
+          if (!sound) {
+            console.error(`Sound with id ${id} not found in sounds library`);
+            continue;
+          }
           
-          // Create new audio element
-          const audio = createAudioElement(sound, normalizedVolume, state.masterVolume);
+          console.log(`AudioStateManager: Adding new sound ${sound.name} from mix`);
+          
+          // Create new audio element with crossfade handler
+          const audio = createAudioElement(sound, normalizedVolume, state.masterVolume, (oldAudio, newAudio) => {
+            // We need to use the audioStateManager's handleCrossfade method
+            // to properly update the state with the new audio element
+            audioStateManager.handleCrossfade(oldAudio, newAudio);
+          });
           
           // Create new active sound
           const newSound: ActiveSound = {
@@ -642,14 +701,22 @@ export const audioReducer = (state: AudioState, action: AudioAction): AudioState
             isPlaying: state.isPlaying
           };
           
-          // Play the sound if we're in playing state
+          // Play the sound if we're in playing state - with a small delay to spread out load
           if (state.isPlaying) {
-            audio.play().catch(e => {
-              console.error("Failed to play audio:", e);
-            });
+            // Add a small delay based on array position to stagger playback starts
+            setTimeout(() => {
+              if (state.isPlaying) { // Check again in case state changed
+                console.log(`AudioStateManager: Playing sound ${sound.name} for mix`);
+                audio.play().catch(e => {
+                  console.error(`Failed to play audio for ${sound.name}:`, e);
+                });
+              }
+            }, 300 * (index + 1)); // Stagger plays to reduce strain
           }
         }
-      });
+        
+        index++; // Increment index for staggered playback
+      }
       
       // Update localStorage
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSoundStates));
@@ -873,7 +940,22 @@ class AudioStateManager {
   }
   
   public applyMix(mix: SoundMix) {
+    // Stop all currently playing sounds first
+    const wasPlaying = this.state.isPlaying;
+    if (wasPlaying) {
+      this.pauseAllSounds();
+    }
+    
+    // Apply the mix
     this.dispatch({ type: 'APPLY_MIX', mix });
+    
+    // Resume playback if it was playing before
+    if (wasPlaying) {
+      // Use a small delay to help browser process the audio changes
+      setTimeout(() => {
+        this.playAllSounds();
+      }, 100);
+    }
   }
   
   public saveCustomMix(mix: SoundMix) {
@@ -911,100 +993,169 @@ class AudioStateManager {
   public handleCrossfade(oldAudio: HTMLAudioElement, newAudio: HTMLAudioElement) {
     console.log('AudioStateManager: handleCrossfade called');
     
-    // Find the active sound that uses the old audio element
-    const activeSound = this.state.activeSounds.find(as => as.audio === oldAudio);
-    if (!activeSound) {
-      console.error('AudioStateManager: Could not find active sound with the old audio element');
+    // Check if either audio element is null or undefined first
+    if (!oldAudio || !newAudio) {
+      console.error('AudioStateManager: Invalid audio elements passed to handleCrossfade');
+      return;
+    }
+    
+    // Stop execution if oldAudio.src is empty - this means the audio was likely
+    // already unloaded during a sound removal or mix change
+    if (!oldAudio.src) {
+      console.log('AudioStateManager: Old audio source is empty, likely already unloaded');
+      return;
+    }
+    
+    // Gather context about the current active sounds for debugging
+    console.log('AudioStateManager: Current active sounds:', 
+      this.state.activeSounds.map(as => `${as.sound.name} (src: ${as.audio.src})`));
       
-      // This is a critical error - we need to check if the newAudio matches any sound in our library
-      // and try to recover by finding the correct sound
-      const matchingSound = sounds.find(s => newAudio.src.includes(s.id) || newAudio.src.includes(s.name));
-      if (matchingSound) {
-        console.log(`AudioStateManager: Attempting recovery - found matching sound ${matchingSound.name}`);
-        
-        // Check if this sound is already in our active sounds with a different audio element
-        const existingActiveSound = this.state.activeSounds.find(as => as.sound.id === matchingSound.id);
-        if (existingActiveSound) {
-          console.log(`AudioStateManager: Replacing audio for existing sound ${matchingSound.name}`);
+    // Find the active sound that uses the old audio element
+    let activeSound = this.state.activeSounds.find(as => as.audio === oldAudio);
+    
+    try {
+      // Additional check - sometimes the object identity changes but the src remains the same
+      if (!activeSound) {
+        // Create a helper function to extract sound ID from URL to make debugging easier
+        const extractSoundId = (url: string) => {
+          // Get filename without extension
+          const filename = url.split('/').pop()?.split('.')[0] || '';
+          // Try to extract standard sound identifiers
+          const soundIdentifiers = [
+            'beach', 'birds', 'cafe', 'rain', 'wind', 'thunder', 'city', 'night',
+            'forest', 'snow', 'train', 'campfire', 'fireplace', 'pink-noise',
+            'brown-noise', 'white-noise', 'heavy-rain', 'rain-window', 'rain-camping', 'debug'
+          ];
           
-          // Update the audio reference in activeSounds
+          // Check for exact matches
+          for (const id of soundIdentifiers) {
+            if (filename === id) return id;
+          }
+          
+          // Check for partial matches
+          for (const id of soundIdentifiers) {
+            if (filename.includes(id)) return id;
+            if (id.includes(filename)) return id;
+          }
+          
+          // Special cases for compound names
+          if (filename.includes('car') && filename.includes('rain')) return 'rain-window';
+          if (filename.includes('camping') && filename.includes('rain')) return 'rain-camping';
+          if (filename.includes('heavy') && filename.includes('rain')) return 'heavy-rain';
+          
+          // No match found
+          return null;
+        };
+        
+        const oldAudioId = extractSoundId(oldAudio.src);
+        console.log('AudioStateManager: Extracted sound ID:', oldAudioId);
+        
+        if (oldAudioId) {
+          // Try to find by ID
+          activeSound = this.state.activeSounds.find(as => as.sound.id === oldAudioId);
+        }
+      }
+      
+      // If we still can't find the active sound, find matching new audio instead
+      if (!activeSound) {
+        console.log('AudioStateManager: Could not find matching active sound for old audio - trying newAudio...');
+        
+        const newAudioId = newAudio.src.split('/').pop()?.split('.')[0] || '';
+        const probableSoundId = newAudioId.includes('ogg') || newAudioId.includes('mp3')
+          ? newAudioId.split('.')[0]
+          : newAudioId;
+          
+        console.log('AudioStateManager: Probable sound ID from new audio:', probableSoundId);
+            
+        // First try direct match by ID
+        activeSound = this.state.activeSounds.find(as => as.sound.id === probableSoundId);
+        
+        // If that doesn't work, try to match by source URL
+        if (!activeSound) {
+          activeSound = this.state.activeSounds.find(as => 
+            newAudio.src.includes(as.sound.id) || as.sound.id.includes(probableSoundId)
+          );
+        }
+        
+        // If we find a match with the new audio
+        if (activeSound) {
+          console.log(`AudioStateManager: Found matching active sound ${activeSound.sound.name} via new audio`);
+          
+          // Update the audio reference directly
           this.state = {
             ...this.state,
             activeSounds: this.state.activeSounds.map(as => {
-              if (as.sound.id === matchingSound.id) {
-                // Ensure the new audio respects the current playing state
-                if (this.state.isPlaying) {
-                  console.log(`AudioStateManager: Ensuring new audio is playing for ${as.sound.name}`);
-                  if (newAudio.paused) {
-                    newAudio.play().catch(e => {
-                      console.error(`AudioStateManager: Failed to play new audio for ${as.sound.name}:`, e);
-                    });
-                  }
-                } else {
-                  console.log(`AudioStateManager: Ensuring new audio is paused for ${as.sound.name}`);
-                  newAudio.pause();
-                }
+              if (as === activeSound) {
                 return { ...as, audio: newAudio };
               }
               return as;
             })
           };
           
+          // Make sure the volume is correct
+          newAudio.volume = activeSound.volume * this.state.masterVolume;
+          
+          // If state is playing, make sure the new audio is too
+          if (this.state.isPlaying && !newAudio.paused) {
+            console.log(`AudioStateManager: Ensuring new audio is playing for ${activeSound.sound.name}`);
+            try {
+              newAudio.play();
+            } catch (e) {
+              console.error(`AudioStateManager: Failed to play new audio for ${activeSound.sound.name}:`, e);
+            }
+          }
+          
           // Notify all listeners of state change
-          console.log('AudioStateManager: Notifying listeners of state change after recovery');
           this.listeners.forEach(listener => listener(this.state));
           return;
         }
       }
       
-      // If we couldn't recover, log the error and return
-      console.error('AudioStateManager: Could not recover from crossfade error');
-      return;
-    }
-    
-    console.log(`AudioStateManager: Replacing audio for ${activeSound.sound.name}`);
-    
-    // Update the audio reference in activeSounds
-    this.state = {
-      ...this.state,
-      activeSounds: this.state.activeSounds.map(as => {
-        if (as.audio === oldAudio) {
-          // Ensure the new audio respects the current playing state
-          if (this.state.isPlaying) {
-            console.log(`AudioStateManager: Ensuring new audio is playing for ${as.sound.name}`);
-            // Make sure the new audio is playing if the state is playing
-            if (newAudio.paused) {
-              newAudio.play().catch(e => {
-                console.error(`AudioStateManager: Failed to play new audio for ${as.sound.name}:`, e);
-                // Try again after a short delay
-                setTimeout(() => {
-                  if (this.state.isPlaying) {
-                    console.log(`AudioStateManager: Retrying play for ${as.sound.name}`);
-                    newAudio.play().catch(retryErr => {
-                      console.error(`AudioStateManager: Retry play also failed for ${as.sound.name}:`, retryErr);
-                    });
-                  }
-                }, 500);
-              });
-            }
-          } else {
-            console.log(`AudioStateManager: Ensuring new audio is paused for ${as.sound.name}`);
-            newAudio.pause();
+      // If we still don't have an active sound match
+      if (!activeSound) {
+        console.log('AudioStateManager: Could not match audio to any active sound - ignoring crossfade request');
+        return;
+      }
+      
+      // We found the active sound, update its audio element
+      console.log(`AudioStateManager: Replacing audio for ${activeSound.sound.name}`);
+      
+      // Update the audio reference in activeSounds
+      this.state = {
+        ...this.state,
+        activeSounds: this.state.activeSounds.map(as => {
+          if (as === activeSound) {
+            return { ...as, audio: newAudio };
           }
-          return { ...as, audio: newAudio };
+          return as;
+        })
+      };
+      
+      // Ensure the volume is correct
+      newAudio.volume = activeSound.volume * this.state.masterVolume;
+      
+      // Ensure the playing state matches
+      if (this.state.isPlaying) {
+        if (newAudio.paused) {
+          newAudio.play().catch(e => {
+            console.error(`AudioStateManager: Failed to play new audio for ${activeSound.sound.name}:`, e);
+          });
         }
-        return as;
-      })
-    };
-    
-    // Notify all listeners of state change
-    console.log('AudioStateManager: Notifying listeners of state change');
-    this.listeners.forEach(listener => listener(this.state));
+      } else {
+        newAudio.pause();
+      }
+      
+      // Notify all listeners of state change
+      this.listeners.forEach(listener => listener(this.state));
+    } catch (error) {
+      console.error('AudioStateManager: Error in handleCrossfade:', error);
+      // Don't rethrow - just log and continue
+    }
   }
 }
 
-// Create a singleton instance
-export const audioStateManager = new AudioStateManager();
-
 // Import sounds at the end to avoid circular dependencies
 import { sounds } from "@/data/sounds";
+
+// Create a singleton instance
+export const audioStateManager = new AudioStateManager();
