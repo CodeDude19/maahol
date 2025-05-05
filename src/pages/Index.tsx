@@ -3,6 +3,8 @@ import { sounds } from "@/data/sounds";
 import SoundGrid from "@/components/SoundGrid";
 import Dashboard from "@/components/Dashboard";
 import AppBar from "@/components/AppBar";
+import TabBar, { TabType } from "@/components/TabBar";
+import MixesTab from "@/components/MixesTab";
 import InstallPWA from "@/components/InstallPWA";
 import { AudioStateProvider, useAudioState } from "@/contexts/AudioStateContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -11,6 +13,7 @@ const IndexContent = () => {
   const [mounted, setMounted] = useState(false);
   const [filteredSounds, setFilteredSounds] = useState(sounds);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<TabType>("discover");
   const { getActiveSounds } = useAudioState();
   const activeSounds = getActiveSounds();
 
@@ -36,6 +39,10 @@ const IndexContent = () => {
     { id: "ambience", name: "Ambience" }
   ];
 
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <AppBar 
@@ -44,7 +51,9 @@ const IndexContent = () => {
         categories={categories}
       />
       
-      <main className="flex-grow px-2 sm:px-4 mb-6 pt-[68px] overflow-y-auto relative">
+      <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
+      
+      <main className="flex-grow px-2 sm:px-4 mb-6 pt-1 overflow-y-auto relative">
         <AnimatePresence>
           {activeSounds.length > 0 && (
             <motion.div 
@@ -63,17 +72,31 @@ const IndexContent = () => {
             />
           )}
         </AnimatePresence>
+        
         <AnimatePresence mode="wait">
-          <motion.div
-            key={selectedCategory}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="relative z-10"
-          >
-            <SoundGrid sounds={filteredSounds} />
-          </motion.div>
+          {activeTab === "discover" ? (
+            <motion.div
+              key="discover"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="relative z-10"
+            >
+              <SoundGrid sounds={filteredSounds} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mixes"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+              className="relative z-10"
+            >
+              <MixesTab />
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
       

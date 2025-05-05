@@ -5,7 +5,6 @@ import { Play, Pause } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import NewSoundMixesDialog from "./NewSoundMixesDialog";
 import SaveMixDialog from "./SaveMixDialog";
 
 // Particle component
@@ -65,7 +64,6 @@ const Dashboard: React.FC = () => {
   
   const isMobile = useIsMobile();
   const [particles] = useState(() => Array.from({ length: 8 }, (_, i) => i * 0.2));
-  const [showMixes, setShowMixes] = useState(false);
   const [showSaveMixDialog, setShowSaveMixDialog] = useState(false);
   
   // Get active sounds from the sound states
@@ -90,8 +88,8 @@ const Dashboard: React.FC = () => {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <div className="w-full">
-        <div className="grid grid-cols-[65%_35%] gap-4">
-          {/* Left column - Volume controls (expandable - 65%) */}
+        <div className="grid grid-cols-[70%_30%] gap-4">
+          {/* Left column - Volume controls (70%) */}
           <div className="space-y-4 py-2">
             {activeSounds.length > 0 ? (
               <div className="space-y-4">
@@ -119,8 +117,8 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           
-          {/* Right column - Playback controls */}
-          <div className="flex flex-col items-center justify-between py-3 px-2 h-full space-y-6">
+          {/* Right column - Play/Pause button (30%) */}
+          <div className="flex items-center justify-center py-3 px-2 h-full">
             <div className="relative">
               <CircleWave isPlaying={isPlaying} />
               {isPlaying && particles.map((delay, index) => (
@@ -139,29 +137,9 @@ const Dashboard: React.FC = () => {
                 }
               </Button>
             </div>
-
-            <div className="flex flex-col items-center space-y-1">
-              <Button
-                variant="ghost"
-                className="p-0 hover:bg-transparent"
-                onClick={() => setShowMixes(true)}
-              >
-                <img 
-                  src="/maahol/images/cassete.png" 
-                  alt="Sound Mixes" 
-                  className="w-[2.9rem] aspect-[512/330] md:w-[3.4rem] hover:opacity-90 transition-all duration-300"
-                  style={{
-                    filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))",
-                    boxShadow: "0 0 15px rgba(255, 255, 255, 0.3)",
-                  }}
-                />
-              </Button>
-              <span className="text-xs font-medium text-whie/80">Mixes</span>
-            </div>
           </div>
         </div>
       </div>
-      <NewSoundMixesDialog open={showMixes} onOpenChange={setShowMixes} />
       <SaveMixDialog open={showSaveMixDialog} onOpenChange={setShowSaveMixDialog} />
     </motion.div>
   );
