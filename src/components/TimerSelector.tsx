@@ -41,21 +41,21 @@ const TimerSelector: React.FC = () => {
       {timeRemaining !== null ? (
         <Button 
           variant="outline" 
-          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
+          className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 hover:text-black focus:text-black active:text-black active:bg-white active:scale-90 transition-transform duration-100 px-3 py-1 h-8"
           onClick={cancelTimer}
         >
-          <span className="font-mono" style={{ fontSize: '0.8rem' }}>{formatTimeRemaining(timeRemaining)}</span>
-          <Clock className="h-3.5 w-3.5 ml-1" />
+          <span className="font-mono text-black" style={{ fontSize: '0.8rem' }}>{formatTimeRemaining(timeRemaining)}</span>
+          <Clock className="h-3.5 w-3.5 ml-1 text-black" />
         </Button>
       ) : (
         <Popover>
           <PopoverTrigger asChild>
             <Button 
               variant="outline" 
-              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 px-3 py-1 h-8"
+              className="rounded-[10px] flex items-center justify-center gap-1 border-white/30 bg-white text-black hover:bg-white/90 hover:text-black focus:text-black active:text-black active:bg-white active:scale-90 transition-transform duration-100 px-3 py-1 h-8"
             >
-              <span style={{ fontSize: '0.8rem' }}>Timer</span>
-              <Clock className="h-3.5 w-3.5 ml-1" />
+              <span className="text-black" style={{ fontSize: '0.8rem' }}>Timer</span>
+              <Clock className="h-3.5 w-3.5 ml-1 text-black" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2 border-white/30 bg-black/60 backdrop-blur-lg">
@@ -65,7 +65,7 @@ const TimerSelector: React.FC = () => {
                 <Button
                   key={option.value}
                   variant={timer === option.value ? "default" : "ghost"}
-                  className="justify-start font-normal"
+                  className="justify-start font-normal active:scale-90 transition-transform duration-100"
                   onClick={() => setTimer(option.value as any)}
                 >
                   {option.label}
@@ -75,7 +75,7 @@ const TimerSelector: React.FC = () => {
               {timeRemaining !== null && (
                 <Button 
                   variant="ghost" 
-                  className="justify-start font-normal text-destructive"
+                  className="justify-start font-normal text-destructive active:scale-90 transition-transform duration-100"
                   onClick={cancelTimer}
                 >
                   <X className="h-4 w-4 mr-2" /> Cancel Timer
