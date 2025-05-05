@@ -22,6 +22,19 @@ const MixesTab: React.FC = () => {
   useEffect(() => {
     setCustomMixes(getCustomMixes());
   }, [getCustomMixes, mixesUpdated]);
+  
+  // Listen for mixsaved event to refresh custom mixes
+  useEffect(() => {
+    const handleMixSaved = () => {
+      setCustomMixes(getCustomMixes());
+    };
+    
+    window.addEventListener('mixsaved', handleMixSaved);
+    
+    return () => {
+      window.removeEventListener('mixsaved', handleMixSaved);
+    };
+  }, [getCustomMixes]);
 
   const handleApplyMix = (mix: SoundMix) => {
     applyMix(mix);
@@ -34,6 +47,9 @@ const MixesTab: React.FC = () => {
     setMixesUpdated(prev => prev + 1);
   };
 
+  // Get soundStates from context once
+  const { soundStates } = useAudioState();
+  
   // Helper function to check if a mix is currently active
   const isMixActive = (mix: SoundMix): boolean => {
     const activeSounds = getActiveSounds();
@@ -42,9 +58,14 @@ const MixesTab: React.FC = () => {
     // If number of sounds doesn't match, it's not a match
     if (mix.sounds.length !== activeSoundIds.length) return false;
 
-    // Check if all sounds in the mix are active
+    // Check if all sounds in the mix are active with the correct volumes
     return mix.sounds.every(mixSound => {
-      return activeSoundIds.includes(mixSound.id);
+      // Check if the sound is active
+      if (!activeSoundIds.includes(mixSound.id)) return false;
+      
+      // Check if the volume matches (with small tolerance for floating point errors)
+      const activeVolume = soundStates[mixSound.id]?.volume / 100 || 0;
+      return Math.abs(activeVolume - mixSound.volume) < 0.01;
     });
   };
 
@@ -58,7 +79,7 @@ const MixesTab: React.FC = () => {
       if (!isActiveA && isActiveB) return 1;
       return 0;
     });
-  }, [getActiveSounds]);
+  }, [isMixActive, soundStates]);
 
   // Sort custom mixes to bring active ones to the top
   const sortedCustomMixes = useMemo(() => {
@@ -70,7 +91,7 @@ const MixesTab: React.FC = () => {
       if (!isActiveA && isActiveB) return 1;
       return 0;
     });
-  }, [customMixes, getActiveSounds]);
+  }, [customMixes, isMixActive, soundStates]);
 
   return (
     <div className={`flex flex-col gap-4 py-1 pb-24 ${isMobile ? 'px-4' : 'max-w-[650px] mx-auto px-4'}`}>

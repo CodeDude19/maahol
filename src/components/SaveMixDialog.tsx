@@ -42,6 +42,10 @@ const SaveMixDialog: React.FC<SaveMixDialogProps> = ({ open, onOpenChange }) => 
     // Save the custom mix
     saveCustomMix(customMix);
     
+    // Dispatch a custom event to notify components that a mix was saved
+    const mixSavedEvent = new CustomEvent('mixsaved', { detail: { mix: customMix } });
+    window.dispatchEvent(mixSavedEvent);
+    
     // Reset form and close dialog
     setMixName("");
     setDescription("");
