@@ -1,4 +1,5 @@
 import { Sound } from "@/data/sounds";
+import { audioPreloader } from "./AudioPreloader";
 
 /**
  * AudioTrack manages a single sound with crossfading capability
@@ -15,14 +16,17 @@ export class AudioTrack {
   private _isPlaying: boolean = false;
   private activeAudio: 'primary' | 'secondary' = 'primary';
   private crossfading: boolean = false;
+  private isReady: boolean = false;
+  private readyListeners: Array<() => void> = [];
   
   constructor(sound: Sound, initialVolume: number = 1) {
     this.sound = sound;
     this._volume = initialVolume;
     
-    // Create audio elements
-    this.primaryAudio = new Audio(sound.audioSrc);
-    this.secondaryAudio = new Audio(sound.audioSrc);
+    // Get audio elements from preloader
+    const { primary, secondary } = audioPreloader.getAudioElements(sound);
+    this.primaryAudio = primary;
+    this.secondaryAudio = secondary;
     
     // Configure audio elements
     this.primaryAudio.loop = false;
@@ -33,6 +37,25 @@ export class AudioTrack {
     
     // Setup crossfading
     this.setupCrossfading();
+    
+    // Check if audio is already loaded or wait for it to load
+    if (audioPreloader.isCached(sound.id)) {
+      this.isReady = true;
+    } else {
+      // Wait for audio to load
+      audioPreloader.getLoadPromise(sound.id)
+        .then(() => {
+          this.isReady = true;
+          // Notify any listeners
+          this.readyListeners.forEach(listener => listener());
+          this.readyListeners = [];
+        })
+        .catch(error => {
+          console.error(`Failed to load audio for ${sound.id}:`, error);
+          // Still mark as ready to avoid blocking indefinitely
+          this.isReady = true;
+        });
+    }
   }
   
   /**
@@ -119,14 +142,35 @@ export class AudioTrack {
   
   /**
    * Start playback of this track
+   * @returns Promise that resolves when playback starts
    */
-  public play(): void {
-    if (this._isPlaying) return;
+  public play(): Promise<void> {
+    if (this._isPlaying) return Promise.resolve();
     
     this._isPlaying = true;
     
-    const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
-    currentAudio.play();
+    // If audio is ready, play immediately
+    if (this.isReady) {
+      const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
+      return currentAudio.play()
+        .catch(error => {
+          console.error(`Error playing audio ${this.sound.id}:`, error);
+          // Most common error is "play() failed because the user didn't interact with the document first"
+          // This is a browser policy, not actually an error in our code
+        });
+    }
+    
+    // Otherwise, wait for audio to be ready
+    return new Promise<void>(resolve => {
+      this.readyListeners.push(() => {
+        const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
+        currentAudio.play()
+          .catch(error => {
+            console.error(`Error playing audio ${this.sound.id}:`, error);
+          })
+          .finally(() => resolve());
+      });
+    });
   }
   
   /**
@@ -212,8 +256,9 @@ export class AudioTrack {
     this.primaryAudio.removeEventListener('timeupdate', () => {});
     this.secondaryAudio.removeEventListener('timeupdate', () => {});
     
-    // Release audio resources
-    this.primaryAudio.src = '';
-    this.secondaryAudio.src = '';
+    // Clear ready listeners
+    this.readyListeners = [];
+    
+    // Note: We don't clear the audio sources here since they're managed by the preloader
   }
 }

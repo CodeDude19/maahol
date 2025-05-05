@@ -1,5 +1,6 @@
 import { Sound } from "@/data/sounds";
 import { AudioTrack } from "./AudioTrack";
+import { audioPreloader } from "./AudioPreloader";
 
 /**
  * Maximum number of concurrent sounds allowed
@@ -29,6 +30,9 @@ export class AudioEngine {
       return false;
     }
     
+    // Start preloading the sound (and any related sounds)
+    audioPreloader.preloadSounds([sound]);
+    
     // Create and configure new track
     const track = new AudioTrack(sound, initialVolume);
     track.masterVolume = this._masterVolume;
@@ -38,7 +42,9 @@ export class AudioEngine {
     
     // Start playing if engine is active
     if (this._isPlaying) {
-      track.play();
+      track.play().catch(err => {
+        console.error(`Error starting playback for ${sound.id}:`, err);
+      });
     }
     
     return true;
@@ -102,14 +108,21 @@ export class AudioEngine {
   
   /**
    * Start playback for all tracks
+   * @returns Promise that resolves when all tracks have started playback
    */
-  public play(): void {
-    if (this._isPlaying) return;
+  public play(): Promise<void> {
+    if (this._isPlaying) return Promise.resolve();
     
     this._isPlaying = true;
-    this.tracks.forEach(track => {
-      track.play();
-    });
+    
+    const playPromises = Array.from(this.tracks.values()).map(track => 
+      track.play().catch(err => {
+        // Catch and log errors but don't fail the entire playback
+        console.error("Error playing track:", err);
+      })
+    );
+    
+    return Promise.all(playPromises).then(() => {});
   }
   
   /**
@@ -168,6 +181,14 @@ export class AudioEngine {
     
     this.tracks.clear();
     this._isPlaying = false;
+  }
+  
+  /**
+   * Preload common sounds to improve first interaction experience
+   * @returns Promise that resolves when preloading is complete
+   */
+  public preloadCommonSounds(): Promise<void> {
+    return audioPreloader.preloadCommonSounds();
   }
 }
 
