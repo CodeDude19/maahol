@@ -68,15 +68,23 @@ const MixesTab: React.FC = () => {
                 >
                   <button
                     className={cn(
-                      "w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 transition-colors overflow-visible rounded-lg", 
+                      "w-full h-auto p-4 px-5 flex flex-col items-start gap-3 transition-colors overflow-visible rounded-lg relative", 
                       isActive 
-                        ? "bg-white/20 border border-white/30" 
+                        ? "bg-white/25 border-2 border-white/70 shadow-[0_0_20px_rgba(255,255,255,0.5)]" 
                         : "bg-white/10 hover:bg-white/15 border border-white/10"
                     )}
                     onClick={() => handleApplyMix(mix)}
                   >
+                    {isActive && (
+                      <div className="absolute top-0 right-0 bg-white text-black text-xs font-bold py-1 px-3 rounded-bl-lg rounded-tr-lg">
+                        NOW PLAYING
+                      </div>
+                    )}
                     <div className="w-full text-left pr-2">
-                      <span className="text-base font-medium text-white block">{mix.name}</span>
+                      <span className={cn(
+                        "text-base text-white block",
+                        isActive ? "font-bold" : "font-medium"
+                      )}>{mix.name}</span>
                       
                       {/* Sound icons displayed horizontally without names */}
                       <div className="flex flex-wrap gap-2 mt-2 w-full">
@@ -147,9 +155,9 @@ const MixesTab: React.FC = () => {
                 >
                   <button
                     className={cn(
-                      "w-full h-auto p-4 px-5 flex flex-col items-start gap-3 border-white/20 transition-colors overflow-visible relative rounded-lg", 
+                      "w-full h-auto p-4 px-5 flex flex-col items-start gap-3 transition-colors overflow-visible relative rounded-lg", 
                       isActive 
-                        ? "bg-white/20 border border-white/30" 
+                        ? "bg-white/25 border-2 border-white/70 shadow-[0_0_20px_rgba(255,255,255,0.5)]" 
                         : "bg-white/10 hover:bg-white/15 border border-white/10"
                     )}
                     onClick={() => handleApplyMix(mix)}
@@ -162,7 +170,15 @@ const MixesTab: React.FC = () => {
                       <X size={14} />
                     </button>
                     <div className="w-full text-left pr-2">
-                      <span className="text-base font-medium text-white block">{mix.name}</span>
+                      {isActive && (
+                        <div className="absolute top-0 right-10 bg-white text-black text-xs font-bold py-1 px-3 rounded-bl-lg rounded-tr-lg z-10">
+                          NOW PLAYING
+                        </div>
+                      )}
+                      <span className={cn(
+                        "text-base text-white block",
+                        isActive ? "font-bold" : "font-medium"
+                      )}>{mix.name}</span>
                       
                       {/* Sound icons displayed horizontally without names */}
                       <div className="flex flex-wrap gap-2 mt-2 w-full">
