@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAudioState } from "@/contexts/AudioStateContext";
 import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Plus } from "lucide-react";
 import VolumeSlider from "./VolumeSlider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -100,15 +100,6 @@ const Dashboard: React.FC = () => {
                   />
                 ))}
                 
-                {/* Save Custom Mix Button */}
-                <Button
-                  variant="outline"
-                  className={`w-full mt-4 bg-white text-black hover:bg-white/90 transition-all ${isSaveButtonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  onClick={() => setShowSaveMixDialog(true)}
-                  disabled={isSaveButtonDisabled}
-                >
-                  Save this custom mix
-                </Button>
               </div>
             ) : (
               <div className="flex items-center justify-center h-full py-4 text-white/60 text-sm">
@@ -117,25 +108,61 @@ const Dashboard: React.FC = () => {
             )}
           </div>
           
-          {/* Right column - Play/Pause button (30%) */}
-          <div className="flex items-center justify-center py-3 px-2 h-full">
+          {/* Right column - Play/Pause and Save Mix buttons (30%) */}
+          <div className="flex flex-col items-center justify-center py-3 px-2 h-full space-y-4">
             <div className="relative">
               <CircleWave isPlaying={isPlaying} />
               {isPlaying && particles.map((delay, index) => (
                 <Particle key={index} delay={delay} />
               ))}
               <Button 
-                className="rounded-full w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-white/90 border border-white/20 hover:bg-white transition-all duration-300 relative z-10"
+                className="rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-white/90 border border-white/20 hover:bg-white transition-all duration-300 relative z-10"
                 style={{
                   boxShadow: "0 0 10px rgba(255, 255, 255, 0.2)"
                 }}
                 onClick={togglePlayPause}
               >
-                {isPlaying ? 
-                  <Pause className="h-6 w-6 md:h-7 md:w-7 text-black fill-black" /> : 
-                  <Play className="h-6 w-6 md:h-7 md:w-7 text-black fill-black" />
-                }
+                {isPlaying ? (
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    className="w-8 h-8 md:w-10 md:h-10 text-black"
+                  >
+                    <rect x="6" y="4" width="4" height="16" fill="currentColor"></rect>
+                    <rect x="14" y="4" width="4" height="16" fill="currentColor"></rect>
+                  </svg>
+                ) : (
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    viewBox="0 0 24 24" 
+                    className="w-8 h-8 md:w-10 md:h-10 text-black"
+                  >
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon>
+                  </svg>
+                )}
               </Button>
+            </div>
+            
+            {/* Circular Save Mix Button */}
+            <div className="flex flex-col items-center">
+              <Button 
+                className={`rounded-full w-12 h-12 md:w-16 md:h-16 flex items-center justify-center border border-white/20 transition-all duration-300 relative z-10 ${isSaveButtonDisabled ? 'bg-white/30 opacity-50 cursor-not-allowed' : 'bg-white hover:bg-white/90'}`}
+                style={{
+                  boxShadow: "0 0 10px rgba(255, 255, 255, 0.2)"
+                }}
+                onClick={() => setShowSaveMixDialog(true)}
+                disabled={isSaveButtonDisabled}
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  className={`w-8 h-8 md:w-10 md:h-10 ${isSaveButtonDisabled ? 'text-white/50' : 'text-black'}`}
+                >
+                  <rect x="11" y="5" width="2" height="14" fill="currentColor" />
+                  <rect x="5" y="11" width="14" height="2" fill="currentColor" />
+                </svg>
+              </Button>
+              <span className="text-xs font-medium text-white/80 mt-1">Save Mix</span>
             </div>
           </div>
         </div>
