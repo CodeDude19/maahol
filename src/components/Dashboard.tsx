@@ -90,16 +90,14 @@ const Dashboard: React.FC = () => {
       <div className="w-full">
         <div className="grid grid-cols-[70%_30%] gap-4">
           {/* Left column - Volume controls (70%) */}
-          <div className="space-y-4 py-2">
+          <div className="py-2 flex flex-col justify-between h-full">
             {activeSounds.length > 0 ? (
-              <div className="space-y-4">
+              <div className="flex flex-col justify-between h-full" style={{ minHeight: activeSounds.length * 40 + 'px' }}>
                 {activeSounds.map((sound) => (
-                  <VolumeSlider 
-                    key={sound.id} 
-                    sound={sound}
-                  />
+                  <div key={sound.id} className="py-1">
+                    <VolumeSlider sound={sound} />
+                  </div>
                 ))}
-                
               </div>
             ) : (
               <div className="flex items-center justify-center h-full py-4 text-white/60 text-sm">
