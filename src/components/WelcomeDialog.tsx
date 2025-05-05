@@ -9,7 +9,7 @@ interface WelcomeDialogProps {
 }
 
 export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
-  const { toggleSound, updateVolume, activeSounds, pauseAllSounds, setVolumeForSound } = useAudioState();
+  const { toggleSound, updateVolume, pauseAllSounds, setVolumeForSound, getActiveSounds } = useAudioState();
   const [isFirstVisit, setIsFirstVisit] = React.useState(true);
 
   // Check if this is first visit when dialog opens
@@ -26,40 +26,52 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
     onOpenChange(false);
   };
 
-  const playRecommendedSounds = async () => {
-    // First pause all sounds
-    pauseAllSounds();
-
-    // Clear all active sounds
-    const soundsToClear = [...activeSounds];
-    for (const { sound } of soundsToClear) {
-      // Remove the sound - this will also clean up its state
-      toggleSound(sound);
-    }
-
-    // Small delay to ensure cleanup
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Get all recommended sounds
-    const heavyRain = sounds.find(s => s.id === 'heavy-rain');
-    const rainWindow = sounds.find(s => s.id === 'rain-window');
-    const thunder = sounds.find(s => s.id === 'thunder');
-
-    if (heavyRain && rainWindow && thunder) {
-      // Set volumes in audioState first
-      updateVolume(heavyRain.id, 40);
-      updateVolume(rainWindow.id, 90);
-      updateVolume(thunder.id, 80);
-
-      // Then add each sound
-      toggleSound(heavyRain);
-      toggleSound(rainWindow);
-      toggleSound(thunder);
-
-      // Finally set the active sound volumes
-      setVolumeForSound(heavyRain.id, 0.4);
-      setVolumeForSound(rainWindow.id, 0.9);
-      setVolumeForSound(thunder.id, 0.8);
+  const playRecommendedSounds = () => {
+    console.log("Starting playback of recommended sounds");
+    
+    try {
+      // First clear existing sounds
+      const currentSounds = getActiveSounds();
+      currentSounds.forEach(sound => {
+        toggleSound(sound);
+      });
+      
+      // Get recommended sounds from the sounds array
+      const rainWindowSound = sounds.find(s => s.id === 'rain-window');
+      const thunderSound = sounds.find(s => s.id === 'thunder');
+      const heavyRainSound = sounds.find(s => s.id === 'heavy-rain');
+      
+      console.log("Found sounds:", {
+        rainWindow: !!rainWindowSound,
+        thunder: !!thunderSound, 
+        heavyRain: !!heavyRainSound
+      });
+      
+      // Add them one by one with a slight delay
+      setTimeout(() => {
+        if (rainWindowSound) {
+          toggleSound(rainWindowSound);
+          console.log("Added rain on windshield sound");
+        }
+        
+        setTimeout(() => {
+          if (thunderSound) {
+            toggleSound(thunderSound);
+            console.log("Added thunder sound");
+          }
+          
+          setTimeout(() => {
+            if (heavyRainSound) {
+              toggleSound(heavyRainSound);
+              // Set heavy rain to 30% volume
+              setVolumeForSound(heavyRainSound.id, 0.3);
+              console.log("Added heavy rain sound at 30% volume");
+            }
+          }, 300);
+        }, 300);
+      }, 300);
+    } catch (error) {
+      console.error("Error playing recommended sounds:", error);
     }
 
     handleDialogClose();
@@ -89,10 +101,14 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
             <div className="space-y-2 mt-4">
               <h3 className="font-medium text-lg">Try My Favorite Mix ✨</h3>
               <p className="text-white/85">
-                I've curated a perfect blend of heavy rain, rain on windshield, and thunder that I use for deep work and peaceful sleep.
+                I've curated a perfect blend of rain on windshield, thunder, and soft heavy rain that I use for deep work and peaceful sleep.
               </p>
               <button
-                onClick={playRecommendedSounds}
+                onClick={() => {
+                  // Add logging to debug
+                  console.log("Try Now button clicked");
+                  playRecommendedSounds();
+                }}
                 className="w-full px-4 py-2 mt-2 rounded-lg bg-emerald-500/80 hover:bg-emerald-500/90 transition-colors text-white font-medium"
               >
                 Try Now
@@ -111,7 +127,7 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
           </div>
           
           <div className="space-y-1">
-            <p><span className="font-medium">Pro Tip:</span> Try Heavy Rain + Thunder + Brown Noise for deep focus! 💫</p>
+            <p><span className="font-medium">Pro Tip:</span> Try Heavy Rain + Thunder + Rain Windshield for deep focus! 💫</p>
           </div>
           
           <div className="pt-3 border-t border-white/20 space-y-1">
