@@ -194,13 +194,13 @@ export const sounds: Sound[] = [
     iconPath: '/maahol/images/Train-W.png',
     color: '#FFFF00',
   },
-  {
-    id: 'Debug',
-    name: 'Debug',
-    description: 'Debugging sounds',
-    audioSrc: getAudioSrc('debug'),
-    category: 'ambience',
-    iconPath: '/maahol/images/Debug-W.png',
-    color: '#FFFF00',
-  }
+  // {
+  //   id: 'Debug',
+  //   name: 'Debug',
+  //   description: 'Debugging sounds',
+  //   audioSrc: getAudioSrc('debug'),
+  //   category: 'ambience',
+  //   iconPath: '/maahol/images/Debug-W.png',
+  //   color: '#FFFF00',
+  // }
 ];

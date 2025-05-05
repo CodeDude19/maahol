@@ -9,7 +9,7 @@ interface WelcomeDialogProps {
 }
 
 export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
-  const { toggleSound, updateVolume, pauseAllSounds, setVolumeForSound, getActiveSounds } = useAudioState();
+  const { toggleSound, updateVolume, pauseAllSounds, playAllActiveSounds, setVolumeForSound, getActiveSounds } = useAudioState();
   const [isFirstVisit, setIsFirstVisit] = React.useState(true);
 
   // Check if this is first visit when dialog opens
@@ -30,7 +30,10 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
     console.log("Starting playback of recommended sounds");
     
     try {
-      // First clear existing sounds
+      // First pause all sounds
+      pauseAllSounds();
+      
+      // Then clear existing sounds
       const currentSounds = getActiveSounds();
       currentSounds.forEach(sound => {
         toggleSound(sound);
@@ -68,13 +71,22 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
               console.log("Added heavy rain sound at 30% volume");
             }
           }, 300);
+          
+          // After all sounds have been added, start playback
+          setTimeout(() => {
+            console.log("Starting playback of sounds");
+            playAllActiveSounds();
+          }, 600);
         }, 300);
       }, 300);
     } catch (error) {
       console.error("Error playing recommended sounds:", error);
     }
 
-    handleDialogClose();
+    // Close the dialog only after sounds are added
+    setTimeout(() => {
+      handleDialogClose();
+    }, 1500);
   };
 
   return (
