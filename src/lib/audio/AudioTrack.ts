@@ -66,6 +66,13 @@ export class AudioTrack {
     this.primaryAudio.addEventListener('timeupdate', () => {
       if (this.activeAudio !== 'primary' || this.crossfading || !this._isPlaying) return;
       
+      // Periodically update the last accessed timestamp to prevent cache pruning
+      // Only update every ~10 seconds to avoid excessive updates
+      if (Math.floor(this.primaryAudio.currentTime) % 10 === 0) {
+        console.log(`[AudioTrack] Sound ${this.sound.id} is playing (${Math.floor(this.primaryAudio.currentTime)}s), updating cache timestamp`);
+        audioPreloader.updateLastAccessed(this.sound.id);
+      }
+      
       const timeLeft = this.primaryAudio.duration - this.primaryAudio.currentTime;
       if (timeLeft > 0 && timeLeft <= 2) {
         this.startCrossfade();
@@ -75,6 +82,13 @@ export class AudioTrack {
     // Handle secondary audio nearing end
     this.secondaryAudio.addEventListener('timeupdate', () => {
       if (this.activeAudio !== 'secondary' || this.crossfading || !this._isPlaying) return;
+      
+      // Periodically update the last accessed timestamp to prevent cache pruning
+      // Only update every ~10 seconds to avoid excessive updates
+      if (Math.floor(this.secondaryAudio.currentTime) % 10 === 0) {
+        console.log(`[AudioTrack] Sound ${this.sound.id} is playing (${Math.floor(this.secondaryAudio.currentTime)}s), updating cache timestamp`);
+        audioPreloader.updateLastAccessed(this.sound.id);
+      }
       
       const timeLeft = this.secondaryAudio.duration - this.secondaryAudio.currentTime;
       if (timeLeft > 0 && timeLeft <= 2) {
@@ -93,6 +107,13 @@ export class AudioTrack {
     
     const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
     const nextAudio = this.activeAudio === 'primary' ? this.secondaryAudio : this.primaryAudio;
+    
+    // Update last accessed time for both audio elements in the cache
+    // This is important to prevent the cache pruning mechanism from removing active audio elements
+    if (audioPreloader) {
+      console.log(`[AudioTrack] Starting crossfade for ${this.sound.id}, updating cache timestamp`);
+      audioPreloader.updateLastAccessed(this.sound.id);
+    }
     
     // Reset the next audio element
     nextAudio.currentTime = 0;
@@ -154,7 +175,12 @@ export class AudioTrack {
       const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
       return currentAudio.play()
         .catch(error => {
-          console.error(`Error playing audio ${this.sound.id}:`, error);
+          console.error(`[AudioTrack] ERROR: Failed to play audio ${this.sound.id}:`, error);
+          console.error(`[AudioTrack] Current time: ${currentAudio.currentTime}s / ${currentAudio.duration}s`);
+          console.error(`[AudioTrack] Audio source: ${this.sound.audioSrc}`);
+          console.error(`[AudioTrack] Is playing: ${this._isPlaying}, Active audio: ${this.activeAudio}`);
+          console.error(`[AudioTrack] Browser: ${navigator.userAgent}`);
+          console.error(`[AudioTrack] Time: ${new Date().toISOString()}`);
           // Most common error is "play() failed because the user didn't interact with the document first"
           // This is a browser policy, not actually an error in our code
         });
@@ -166,7 +192,12 @@ export class AudioTrack {
         const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
         currentAudio.play()
           .catch(error => {
-            console.error(`Error playing audio ${this.sound.id}:`, error);
+            console.error(`[AudioTrack] ERROR: Failed to play audio ${this.sound.id} after loading:`, error);
+            console.error(`[AudioTrack] Current time: ${currentAudio.currentTime}s / ${currentAudio.duration}s`);
+            console.error(`[AudioTrack] Audio source: ${this.sound.audioSrc}`);
+            console.error(`[AudioTrack] Is playing: ${this._isPlaying}, Active audio: ${this.activeAudio}`);
+            console.error(`[AudioTrack] Browser: ${navigator.userAgent}`);
+            console.error(`[AudioTrack] Time: ${new Date().toISOString()}`);
           })
           .finally(() => resolve());
       });

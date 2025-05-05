@@ -194,3 +194,8 @@ export class AudioEngine {
 
 // Create and export a singleton instance
 export const audioEngine = new AudioEngine();
+
+// Make audioEngine available globally for cache management
+if (typeof window !== 'undefined') {
+  (window as any).audioEngine = audioEngine;
+}

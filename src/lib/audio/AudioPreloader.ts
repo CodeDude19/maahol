@@ -18,9 +18,9 @@ export class AudioPreloader {
   private preloadQueue: string[] = [];
   private isPreloading: boolean = false;
   private maxConcurrentLoads: number = 2; // Adjust based on performance testing
-  private maxCacheSize: number = 10; // Maximum number of audio files to keep in cache
+  private maxCacheSize: number = 20; // Maximum number of audio files to keep in cache (increased from 10)
   private cachePruneInterval: number | null = null;
-  private cacheTTL: number = 10 * 60 * 1000; // 10 minutes in milliseconds
+  private cacheTTL: number = 30 * 60 * 1000; // 30 minutes in milliseconds (increased from 10 minutes)
 
   // Private constructor for singleton
   private constructor() {
@@ -132,7 +132,10 @@ export class AudioPreloader {
         };
 
         const onError = (e: ErrorEvent) => {
-          console.error(`Error loading audio for ${sound.id}:`, e);
+          console.error(`[AudioPreloader] ERROR: Failed to load audio for ${sound.id}:`, e);
+          console.error(`[AudioPreloader] Audio source: ${sound.audioSrc}`);
+          console.error(`[AudioPreloader] Browser: ${navigator.userAgent}`);
+          console.error(`[AudioPreloader] Time: ${new Date().toISOString()}`);
           reject(e);
         };
 
@@ -226,6 +229,8 @@ export class AudioPreloader {
   public removeFromCache(soundId: string): void {
     const entry = this.audioCache.get(soundId);
     if (entry) {
+      console.log(`[AudioPreloader] Removing sound from cache: ${soundId}`);
+      
       // Clean up resources
       entry.primary.src = '';
       entry.secondary.src = '';
@@ -249,6 +254,18 @@ export class AudioPreloader {
   public isLoading(soundId: string): boolean {
     const entry = this.audioCache.get(soundId);
     return !!entry && entry.isLoading;
+  }
+  
+  /**
+   * Update the lastAccessed timestamp for a sound
+   * Use this to mark sounds that are actively being used to prevent them from being pruned
+   */
+  public updateLastAccessed(soundId: string): void {
+    const entry = this.audioCache.get(soundId);
+    if (entry) {
+      entry.lastAccessed = Date.now();
+      console.log(`[AudioPreloader] Updated lastAccessed for sound: ${soundId}`);
+    }
   }
   
   /**
@@ -280,14 +297,42 @@ export class AudioPreloader {
    * Prune old items from the cache
    */
   private pruneCache(): void {
+    console.log(`[AudioPreloader] Starting cache pruning. Current cache size: ${this.audioCache.size}`);
+    
     const now = Date.now();
+    
+    // Get all active sound IDs from the AudioEngine to avoid pruning them
+    const activeEngine = (window as any).audioEngine;
+    const activeSoundIds: string[] = [];
+    
+    if (activeEngine) {
+      const activeSounds = activeEngine.getActiveSounds();
+      activeSounds.forEach(soundObj => {
+        activeSoundIds.push(soundObj.sound.id);
+      });
+      console.log(`[AudioPreloader] Active sounds protected from pruning: ${activeSoundIds.join(', ') || 'none'}`);
+    }
+    
+    let prunedCount = 0;
     
     // First, remove any items that haven't been accessed in the TTL period
     this.audioCache.forEach((entry, soundId) => {
+      // Skip pruning for currently active sounds
+      if (activeSoundIds.includes(soundId)) {
+        const minutesSinceAccess = Math.floor((now - entry.lastAccessed) / 1000 / 60);
+        console.log(`[AudioPreloader] Skipping pruning for active sound: ${soundId} (last accessed ${minutesSinceAccess} minutes ago)`);
+        return;
+      }
+      
       if (now - entry.lastAccessed > this.cacheTTL) {
+        const minutesSinceAccess = Math.floor((now - entry.lastAccessed) / 1000 / 60);
+        console.log(`[AudioPreloader] Pruning inactive sound: ${soundId} (${minutesSinceAccess} minutes since last access)`);
         this.removeFromCache(soundId);
+        prunedCount++;
       }
     });
+    
+    console.log(`[AudioPreloader] Pruned ${prunedCount} sounds due to TTL expiration`);
     
     // If still over max size, remove oldest accessed items
     this.checkCacheSize();
@@ -298,18 +343,45 @@ export class AudioPreloader {
    */
   private checkCacheSize(): void {
     if (this.audioCache.size <= this.maxCacheSize) {
+      console.log(`[AudioPreloader] Cache size (${this.audioCache.size}) is within limit (${this.maxCacheSize}), no size pruning needed`);
       return;
+    }
+    
+    console.log(`[AudioPreloader] Cache size (${this.audioCache.size}) exceeds max (${this.maxCacheSize}), pruning oldest entries`);
+    
+    // Get all active sound IDs from the AudioEngine to avoid pruning them
+    const activeEngine = (window as any).audioEngine;
+    const activeSoundIds: string[] = [];
+    
+    if (activeEngine) {
+      const activeSounds = activeEngine.getActiveSounds();
+      activeSounds.forEach(soundObj => {
+        activeSoundIds.push(soundObj.sound.id);
+      });
     }
     
     // Get all entries sorted by last accessed time (oldest first)
     const entries = Array.from(this.audioCache.entries())
+      // Filter out active sounds
+      .filter(([soundId]) => !activeSoundIds.includes(soundId))
+      // Sort by last accessed time
       .sort(([, a], [, b]) => a.lastAccessed - b.lastAccessed);
     
-    // Remove oldest entries until we're under the limit
-    while (entries.length > this.maxCacheSize) {
+    // Calculate how many entries we need to remove
+    const totalToRemove = Math.max(0, this.audioCache.size - this.maxCacheSize);
+    
+    console.log(`[AudioPreloader] Need to remove ${totalToRemove} entries to meet cache size limit`);
+    
+    // Only remove up to the calculated number and never remove active sounds
+    let removedCount = 0;
+    for (let i = 0; i < totalToRemove && entries.length > 0; i++) {
       const [soundId] = entries.shift()!;
+      console.log(`[AudioPreloader] Removing sound from cache due to size limit: ${soundId}`);
       this.removeFromCache(soundId);
+      removedCount++;
     }
+    
+    console.log(`[AudioPreloader] Removed ${removedCount} entries from cache. New size: ${this.audioCache.size}`);
   }
 }
 
