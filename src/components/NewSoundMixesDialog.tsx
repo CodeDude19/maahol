@@ -60,7 +60,7 @@ const NewSoundMixesDialog: React.FC<SoundMixesDialogProps> = ({ open, onOpenChan
         <DialogHeader>
           <DialogTitle className="text-xl font-medium text-white">Sound Mixes</DialogTitle>
         </DialogHeader>
-        <div className={`flex flex-col gap-4 py-4 px-1 ${isMobile ? 'h-[calc(100%-4rem)] overflow-y-auto pr-3' : 'overflow-y-auto max-h-[60vh] pr-3'}`}>
+        <div className={`flex flex-col gap-4 py-4 px-1 ${isMobile ? 'h-[calc(100%-4rem)] overflow-y-auto pr-3' : 'overflow-y-auto max-h-[60vh] pr-3'} [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent`}>
           {/* Predefined Mixes Section */}
           {soundMixes.length > 0 && (
             <div className="mb-2">

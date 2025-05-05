@@ -1,4 +1,4 @@
-const CACHE_NAME = 'maahol-v2-0.5';
+const CACHE_NAME = 'maahol-v2-0.6';
 const TEMP_CACHE_NAME = 'maahol-temp-cache';
 const ASSETS_CACHE_NAME = 'maahol-assets-cache';
 

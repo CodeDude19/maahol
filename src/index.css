@@ -70,6 +70,14 @@
     @apply inline-block animate-wave origin-bottom;
     animation-delay: calc(0.1s * var(--i));
   }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-white\/20 {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
 }
 
 @keyframes wave {
