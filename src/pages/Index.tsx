@@ -11,7 +11,8 @@ const IndexContent = () => {
   const [mounted, setMounted] = useState(false);
   const [filteredSounds, setFilteredSounds] = useState(sounds);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const { activeSounds } = useAudioState();
+  const { getActiveSounds } = useAudioState();
+  const activeSounds = getActiveSounds();
 
   useEffect(() => {
     setMounted(true);

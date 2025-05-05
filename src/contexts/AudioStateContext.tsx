@@ -2,22 +2,21 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Sound } from '@/data/sounds';
 import { toast } from '@/hooks/use-toast';
 import { soundMixes } from '@/data/soundMixes';
+import { MAX_CONCURRENT_SOUNDS } from '@/lib/audio/AudioEngine';
 
 import {
   audioStateManager,
   AudioState,
   TimerOption,
-  ActiveSound,
   SoundMix
-} from '@/lib/AudioStateManager';
+} from '@/lib/audio/AudioStateManager';
 
 interface AudioContextType {
-  activeSounds: ActiveSound[];
+  soundStates: Record<string, { volume: number; isPlaying: boolean }>;
   masterVolume: number;
   isPlaying: boolean;
   timer: TimerOption;
   timeRemaining: number | null;
-  soundStates: Record<string, { volume: number; isPlaying: boolean }>;
   toggleSound: (sound: Sound) => void;
   setVolumeForSound: (soundId: string, volume: number) => void;
   setMasterVolume: (volume: number) => void;
@@ -33,6 +32,7 @@ interface AudioContextType {
   getCustomMixes: () => SoundMix[];
   isCurrentMixPredefined: () => boolean;
   isCurrentMixSaved: () => boolean;
+  getActiveSounds: () => Sound[];
 }
 
 const AudioStateContext = createContext<AudioContextType | undefined>(undefined);
@@ -70,12 +70,19 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
   }, []);
 
+  // Get active sounds from the sound states
+  const getActiveSounds = (): Sound[] => {
+    return Object.keys(audioState.soundStates).map(id => {
+      return sounds.find(s => s.id === id)!;
+    }).filter(Boolean);
+  };
+
   // Wrapper functions with toast notifications
   const toggleSound = (sound: Sound) => {
-    const isActive = audioState.activeSounds.some(as => as.sound.id === sound.id);
+    const isActive = Object.keys(audioState.soundStates).includes(sound.id);
     
-    // If not active and we already have 3 sounds, show toast and don't add
-    if (!isActive && audioState.activeSounds.length >= 3) {
+    // If not active and we already have max sounds, show toast and don't add
+    if (!isActive && Object.keys(audioState.soundStates).length >= MAX_CONCURRENT_SOUNDS) {
       toast({
         description: "Three create harmony, above 3 maahol is Chaos!",
       });
@@ -158,7 +165,6 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const applyMix = (mix: SoundMix) => {
-    console.log('%c[MIX] Starting to apply mix:', 'color: #4CAF50; font-weight: bold', mix.name);
     audioStateManager.applyMix(mix);
     
     toast({
@@ -182,20 +188,21 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Check if current mix matches any predefined or custom mix
   const isCurrentMixSaved = (): boolean => {
-    if (audioState.activeSounds.length === 0) return false;
+    const activeSoundIds = Object.keys(audioState.soundStates);
+    if (activeSoundIds.length === 0) return false;
     
     // Helper function to check if a mix matches the current active sounds
     const doesMixMatch = (mix: SoundMix): boolean => {
       // If the number of sounds doesn't match, it's not the same mix
-      if (mix.sounds.length !== audioState.activeSounds.length) return false;
+      if (mix.sounds.length !== activeSoundIds.length) return false;
       
       // Check if all sounds in the mix are in the active sounds with the same volume
       return mix.sounds.every(mixSound => {
-        const activeSound = audioState.activeSounds.find(as => as.sound.id === mixSound.id);
-        if (!activeSound) return false;
+        const activeState = audioState.soundStates[mixSound.id];
+        if (!activeState) return false;
         
         // Compare volumes with a small tolerance for floating point differences
-        return Math.abs(activeSound.volume - mixSound.volume) < 0.01;
+        return Math.abs(activeState.volume / 100 - mixSound.volume) < 0.01;
       });
     };
     
@@ -220,12 +227,11 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const contextValue: AudioContextType = {
-    activeSounds: audioState.activeSounds,
+    soundStates: audioState.soundStates,
     masterVolume: audioState.masterVolume,
     isPlaying: audioState.isPlaying,
     timer: audioState.timer,
     timeRemaining: audioState.timeRemaining,
-    soundStates: audioState.soundStates,
     toggleSound,
     setVolumeForSound,
     setMasterVolume,
@@ -240,7 +246,8 @@ export const AudioStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     deleteCustomMix,
     getCustomMixes,
     isCurrentMixPredefined,
-    isCurrentMixSaved
+    isCurrentMixSaved,
+    getActiveSounds
   };
 
   return (
@@ -257,3 +264,6 @@ export const useAudioState = () => {
   }
   return context;
 };
+
+// Import sounds at the end to avoid circular dependencies
+import { sounds } from "@/data/sounds";

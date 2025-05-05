@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Audio System Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #121212;
+      color: #fff;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #10b981;
+    }
+    button {
+      background: #10b981;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .sound-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .sound-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    .active {
+      background: #10b981;
+    }
+    .slider-container {
+      margin: 20px 0;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Audio System Test</h1>
+    <div>
+      <button id="playPauseBtn">Play/Pause</button>
+      <button id="masterVolDown">Master Vol -</button>
+      <button id="masterVolUp">Master Vol +</button>
+    </div>
+
+    <div class="slider-container">
+      <h3>Master Volume: <span id="masterVolValue">70%</span></h3>
+      <input type="range" id="masterVolumeSlider" min="0" max="100" value="70">
+    </div>
+
+    <div class="active-sounds" id="activeSounds">
+      <!-- Active sounds with volume controls will be displayed here -->
+    </div>
+
+    <h2>Available Sounds</h2>
+    <div class="sound-grid" id="soundGrid">
+      <!-- Sound cards will be generated here -->
+    </div>
+  </div>
+
+  <script>
+    // Sample sounds
+    const sounds = [
+      { id: 'rain', name: 'Rain', audioSrc: '/maahol/sounds/rain.mp3' },
+      { id: 'thunder', name: 'Thunder', audioSrc: '/maahol/sounds/thunder.mp3' },
+      { id: 'birds', name: 'Birds', audioSrc: '/maahol/sounds/birds.mp3' },
+      { id: 'cafe', name: 'Cafe', audioSrc: '/maahol/sounds/cafe.mp3' },
+      { id: 'forest', name: 'Forest', audioSrc: '/maahol/sounds/forest.mp3' },
+      { id: 'campfire', name: 'Campfire', audioSrc: '/maahol/sounds/campfire.mp3' }
+    ];
+
+    // Import AudioTrack and AudioEngine classes
+    class AudioTrack {
+      constructor(sound, initialVolume = 1) {
+        this.sound = sound;
+        this._volume = initialVolume;
+        this._masterVolume = 1;
+        this._isPlaying = false;
+        this.activeAudio = 'primary';
+        this.crossfading = false;
+        
+        // Create audio elements
+        this.primaryAudio = new Audio(sound.audioSrc);
+        this.secondaryAudio = new Audio(sound.audioSrc);
+        
+        // Configure audio elements
+        this.primaryAudio.loop = false;
+        this.secondaryAudio.loop = false;
+        
+        // Set initial volumes
+        this.updateVolumes();
+        
+        // Setup crossfading
+        this.setupCrossfading();
+      }
+      
+      setupCrossfading() {
+        // Handle primary audio nearing end
+        this.primaryAudio.addEventListener('timeupdate', () => {
+          if (this.activeAudio !== 'primary' || this.crossfading || !this._isPlaying) return;
+          
+          const timeLeft = this.primaryAudio.duration - this.primaryAudio.currentTime;
+          if (timeLeft > 0 && timeLeft <= 2) {
+            this.startCrossfade();
+          }
+        });
+        
+        // Handle secondary audio nearing end
+        this.secondaryAudio.addEventListener('timeupdate', () => {
+          if (this.activeAudio !== 'secondary' || this.crossfading || !this._isPlaying) return;
+          
+          const timeLeft = this.secondaryAudio.duration - this.secondaryAudio.currentTime;
+          if (timeLeft > 0 && timeLeft <= 2) {
+            this.startCrossfade();
+          }
+        });
+      }
+      
+      startCrossfade() {
+        if (this.crossfading || !this._isPlaying) return;
+        
+        this.crossfading = true;
+        
+        const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
+        const nextAudio = this.activeAudio === 'primary' ? this.secondaryAudio : this.primaryAudio;
+        
+        // Reset the next audio element
+        nextAudio.currentTime = 0;
+        nextAudio.volume = 0;
+        
+        // Start playing the next audio
+        nextAudio.play();
+        
+        // Perform crossfade
+        const steps = 20;
+        const interval = 100; // 100ms intervals
+        let step = 0;
+        
+        const fade = setInterval(() => {
+          step++;
+          const ratio = step / steps;
+          
+          // If playback was stopped during crossfade
+          if (!this._isPlaying) {
+            clearInterval(fade);
+            this.crossfading = false;
+            return;
+          }
+          
+          // Set volumes based on progress
+          const effectiveVolume = this._volume * this._masterVolume;
+          nextAudio.volume = effectiveVolume * ratio;
+          currentAudio.volume = effectiveVolume * (1 - ratio);
+          
+          if (step >= steps) {
+            clearInterval(fade);
+            
+            // Switch active audio
+            this.activeAudio = this.activeAudio === 'primary' ? 'secondary' : 'primary';
+            
+            // Stop the previous audio
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            
+            // Ensure next audio has correct volume
+            nextAudio.volume = effectiveVolume;
+            
+            this.crossfading = false;
+          }
+        }, interval);
+      }
+      
+      play() {
+        if (this._isPlaying) return;
+        
+        this._isPlaying = true;
+        
+        const currentAudio = this.activeAudio === 'primary' ? this.primaryAudio : this.secondaryAudio;
+        currentAudio.play();
+      }
+      
+      pause() {
+        if (!this._isPlaying) return;
+        
+        this._isPlaying = false;
+        
+        this.primaryAudio.pause();
+        this.secondaryAudio.pause();
+        this.crossfading = false;
+      }
+      
+      updateVolumes() {
+        const effectiveVolume = this._volume * this._masterVolume;
+        
+        // Only set volume on the currently active audio
+        if (this.activeAudio === 'primary') {
+          this.primaryAudio.volume = effectiveVolume;
+          // Secondary might be silent or crossfading
+          if (!this.crossfading) {
+            this.secondaryAudio.volume = 0;
+          }
+        } else {
+          this.secondaryAudio.volume = effectiveVolume;
+          // Primary might be silent or crossfading
+          if (!this.crossfading) {
+            this.primaryAudio.volume = 0;
+          }
+        }
+      }
+      
+      set volume(value) {
+        this._volume = Math.max(0, Math.min(1, value));
+        this.updateVolumes();
+      }
+      
+      get volume() {
+        return this._volume;
+      }
+      
+      set masterVolume(value) {
+        this._masterVolume = Math.max(0, Math.min(1, value));
+        this.updateVolumes();
+      }
+      
+      get soundData() {
+        return this.sound;
+      }
+      
+      get isPlaying() {
+        return this._isPlaying;
+      }
+      
+      dispose() {
+        // Stop playback
+        this.pause();
+        
+        // Remove event listeners
+        this.primaryAudio.ontimeupdate = null;
+        this.secondaryAudio.ontimeupdate = null;
+        
+        // Release audio resources
+        this.primaryAudio.src = '';
+        this.secondaryAudio.src = '';
+      }
+    }
+
+    class AudioEngine {
+      constructor() {
+        this.tracks = new Map();
+        this._masterVolume = 0.7;
+        this._isPlaying = false;
+      }
+      
+      addSound(sound, initialVolume = 1) {
+        // Check if already added
+        if (this.tracks.has(sound.id)) {
+          return true;
+        }
+        
+        // Check if at max capacity
+        if (this.tracks.size >= 3) {
+          return false;
+        }
+        
+        // Create and configure new track
+        const track = new AudioTrack(sound, initialVolume);
+        track.masterVolume = this._masterVolume;
+        
+        // Add to tracks
+        this.tracks.set(sound.id, track);
+        
+        // Start playing if engine is active
+        if (this._isPlaying) {
+          track.play();
+        }
+        
+        return true;
+      }
+      
+      removeSound(soundId) {
+        const track = this.tracks.get(soundId);
+        if (!track) return;
+        
+        // Dispose and remove track
+        track.dispose();
+        this.tracks.delete(soundId);
+      }
+      
+      hasSound(soundId) {
+        return this.tracks.has(soundId);
+      }
+      
+      setVolume(soundId, volume) {
+        const track = this.tracks.get(soundId);
+        if (track) {
+          track.volume = volume;
+        }
+      }
+      
+      getVolume(soundId) {
+        const track = this.tracks.get(soundId);
+        return track ? track.volume : 0;
+      }
+      
+      set masterVolume(value) {
+        this._masterVolume = Math.max(0, Math.min(1, value));
+        
+        // Update all tracks
+        this.tracks.forEach(track => {
+          track.masterVolume = this._masterVolume;
+        });
+      }
+      
+      get masterVolume() {
+        return this._masterVolume;
+      }
+      
+      play() {
+        if (this._isPlaying) return;
+        
+        this._isPlaying = true;
+        this.tracks.forEach(track => {
+          track.play();
+        });
+      }
+      
+      pause() {
+        if (!this._isPlaying) return;
+        
+        this._isPlaying = false;
+        this.tracks.forEach(track => {
+          track.pause();
+        });
+      }
+      
+      togglePlayPause() {
+        if (this._isPlaying) {
+          this.pause();
+        } else {
+          this.play();
+        }
+      }
+      
+      getActiveSounds() {
+        const activeSounds = [];
+        
+        this.tracks.forEach(track => {
+          activeSounds.push({
+            sound: track.soundData,
+            volume: track.volume
+          });
+        });
+        
+        return activeSounds;
+      }
+      
+      get isPlaying() {
+        return this._isPlaying;
+      }
+      
+      dispose() {
+        this.tracks.forEach(track => {
+          track.dispose();
+        });
+        
+        this.tracks.clear();
+        this._isPlaying = false;
+      }
+    }
+
+    // Create audio engine instance
+    const audioEngine = new AudioEngine();
+
+    // UI Handlers
+    function initUI() {
+      // Create sound cards
+      const soundGrid = document.getElementById('soundGrid');
+      sounds.forEach(sound => {
+        const card = document.createElement('div');
+        card.className = 'sound-card';
+        card.dataset.soundId = sound.id;
+        card.innerHTML = `<h3>${sound.name}</h3>`;
+        card.addEventListener('click', () => toggleSound(sound));
+        soundGrid.appendChild(card);
+      });
+
+      // Set up play/pause button
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      playPauseBtn.addEventListener('click', () => {
+        audioEngine.togglePlayPause();
+        updateUI();
+      });
+
+      // Set up volume controls
+      const masterVolSlider = document.getElementById('masterVolumeSlider');
+      masterVolSlider.addEventListener('input', (e) => {
+        const newVolume = parseInt(e.target.value) / 100;
+        audioEngine.masterVolume = newVolume;
+        document.getElementById('masterVolValue').textContent = `${Math.round(newVolume * 100)}%`;
+        updateUI();
+      });
+
+      document.getElementById('masterVolDown').addEventListener('click', () => {
+        const newVolume = Math.max(0, audioEngine.masterVolume - 0.1);
+        audioEngine.masterVolume = newVolume;
+        masterVolSlider.value = newVolume * 100;
+        document.getElementById('masterVolValue').textContent = `${Math.round(newVolume * 100)}%`;
+        updateUI();
+      });
+
+      document.getElementById('masterVolUp').addEventListener('click', () => {
+        const newVolume = Math.min(1, audioEngine.masterVolume + 0.1);
+        audioEngine.masterVolume = newVolume;
+        masterVolSlider.value = newVolume * 100;
+        document.getElementById('masterVolValue').textContent = `${Math.round(newVolume * 100)}%`;
+        updateUI();
+      });
+
+      // Initial UI update
+      updateUI();
+    }
+
+    function toggleSound(sound) {
+      if (audioEngine.hasSound(sound.id)) {
+        audioEngine.removeSound(sound.id);
+      } else {
+        audioEngine.addSound(sound);
+      }
+      updateUI();
+    }
+
+    function updateUI() {
+      // Update play/pause button
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      playPauseBtn.textContent = audioEngine.isPlaying ? 'Pause' : 'Play';
+
+      // Update sound cards
+      const soundCards = document.querySelectorAll('.sound-card');
+      soundCards.forEach(card => {
+        const soundId = card.dataset.soundId;
+        if (audioEngine.hasSound(soundId)) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      });
+
+      // Update active sounds
+      const activeSoundsEl = document.getElementById('activeSounds');
+      activeSoundsEl.innerHTML = '';
+      
+      const activeSounds = audioEngine.getActiveSounds();
+      if (activeSounds.length > 0) {
+        const h2 = document.createElement('h2');
+        h2.textContent = 'Active Sounds';
+        activeSoundsEl.appendChild(h2);
+        
+        activeSounds.forEach(({ sound, volume }) => {
+          const container = document.createElement('div');
+          container.className = 'slider-container';
+          
+          const label = document.createElement('h3');
+          label.textContent = `${sound.name}: ${Math.round(volume * 100)}%`;
+          
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.min = '0';
+          slider.max = '100';
+          slider.value = volume * 100;
+          slider.addEventListener('input', (e) => {
+            const newVolume = parseInt(e.target.value) / 100;
+            audioEngine.setVolume(sound.id, newVolume);
+            label.textContent = `${sound.name}: ${Math.round(newVolume * 100)}%`;
+          });
+          
+          container.appendChild(label);
+          container.appendChild(slider);
+          activeSoundsEl.appendChild(container);
+        });
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initUI);
+  </script>
+</body>
+</html>

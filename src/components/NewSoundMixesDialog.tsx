@@ -7,7 +7,7 @@ import { sounds } from "@/data/sounds";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { getLuminosity } from "@/lib/color";
-import { SoundMix } from "@/lib/AudioStateManager";
+import { SoundMix } from "@/lib/audio/AudioStateManager";
 import { X } from "lucide-react";
 
 import { soundMixes } from "@/data/soundMixes";

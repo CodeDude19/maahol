@@ -54,12 +54,13 @@ const CircleWave = ({ isPlaying }: { isPlaying: boolean }) => (
 
 const Dashboard: React.FC = () => {
   const { 
-    activeSounds, 
+    soundStates, 
     masterVolume, 
     setMasterVolume, 
     isPlaying, 
     togglePlayPause,
-    isCurrentMixSaved
+    isCurrentMixSaved,
+    getActiveSounds
   } = useAudioState();
   
   const isMobile = useIsMobile();
@@ -67,9 +68,13 @@ const Dashboard: React.FC = () => {
   const [showMixes, setShowMixes] = useState(false);
   const [showSaveMixDialog, setShowSaveMixDialog] = useState(false);
   
+  // Get active sounds from the sound states
+  const activeSounds = getActiveSounds();
+  
   // Determine if the save mix button should be disabled
   const isSaveButtonDisabled = activeSounds.length === 0 || isCurrentMixSaved();
 
+  // Return early if no active sounds
   if (activeSounds.length === 0) {
     return null;
   }
@@ -90,11 +95,10 @@ const Dashboard: React.FC = () => {
           <div className="space-y-4 py-2">
             {activeSounds.length > 0 ? (
               <div className="space-y-4">
-                {activeSounds.map(({ sound, volume }) => (
+                {activeSounds.map((sound) => (
                   <VolumeSlider 
                     key={sound.id} 
-                    sound={sound} 
-                    volume={volume}
+                    sound={sound}
                   />
                 ))}
                 

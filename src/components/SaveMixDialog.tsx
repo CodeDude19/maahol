@@ -13,7 +13,7 @@ interface SaveMixDialogProps {
 }
 
 const SaveMixDialog: React.FC<SaveMixDialogProps> = ({ open, onOpenChange }) => {
-  const { activeSounds, saveCustomMix } = useAudioState();
+  const { getActiveSounds, soundStates, saveCustomMix } = useAudioState();
   const isMobile = useIsMobile();
   const [mixName, setMixName] = useState("");
   const [description, setDescription] = useState("");
@@ -26,13 +26,16 @@ const SaveMixDialog: React.FC<SaveMixDialogProps> = ({ open, onOpenChange }) => 
       return;
     }
 
+    // Get active sounds
+    const activeSounds = getActiveSounds();
+    
     // Create a mix object from the current active sounds
     const customMix = {
       name: mixName,
       description: description || "Custom mix",
-      sounds: activeSounds.map(({ sound, volume }) => ({
+      sounds: activeSounds.map(sound => ({
         id: sound.id,
-        volume,
+        volume: soundStates[sound.id] ? soundStates[sound.id].volume / 100 : 1,
       })),
     };
 

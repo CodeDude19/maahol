@@ -10,7 +10,8 @@ interface SoundGridProps {
 }
 
 const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
-  const { activeSounds, toggleSound } = useAudioState();
+  const { getActiveSounds, toggleSound } = useAudioState();
+  const activeSounds = getActiveSounds();
   const isMobile = useIsMobile();
   
   const container = {
@@ -56,8 +57,8 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
 
   // Sort sounds to put active ones first
   const sortedSounds = [...sounds].sort((a, b) => {
-    const aActive = activeSounds.some(as => as.sound.id === a.id);
-    const bActive = activeSounds.some(as => as.sound.id === b.id);
+    const aActive = activeSounds.some(sound => sound.id === a.id);
+    const bActive = activeSounds.some(sound => sound.id === b.id);
     if (aActive && !bActive) return -1;
     if (!aActive && bActive) return 1;
     return 0;
@@ -73,7 +74,7 @@ const SoundGrid: React.FC<SoundGridProps> = ({ sounds }) => {
     >
       <AnimatePresence mode="popLayout">
         {sortedSounds.map((sound) => {
-          const isActive = activeSounds.some(as => as.sound.id === sound.id);
+          const isActive = activeSounds.some(activeSound => activeSound.id === sound.id);
           
           return (
             <motion.div 

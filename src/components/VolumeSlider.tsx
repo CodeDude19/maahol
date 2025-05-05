@@ -1,17 +1,24 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Sound } from "@/data/sounds";
 import { useAudioState } from "@/contexts/AudioStateContext";
 
 interface VolumeSliderProps {
   sound: Sound;
-  volume: number;
 }
 
-const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound, volume }) => {
-  const { setVolumeForSound } = useAudioState();
+const VolumeSlider: React.FC<VolumeSliderProps> = ({ sound }) => {
+  const { setVolumeForSound, soundStates } = useAudioState();
+  const soundState = soundStates[sound.id];
+  const volume = soundState ? soundState.volume / 100 : 1; // Convert from 0-100 to 0-1
+  
   const [localVolume, setLocalVolume] = useState(volume);
   const sliderRef = useRef<HTMLDivElement>(null);
+  
+  // Update local volume when sound state changes
+  useEffect(() => {
+    setLocalVolume(volume);
+  }, [volume]);
 
   const handleVolumeChange = (value: number[]) => {
     const newVolume = value[0];
