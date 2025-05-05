@@ -53,18 +53,21 @@ const TabButton: React.FC<TabButtonProps> = ({ isActive, onClick, label }) => {
     <button
       onClick={onClick}
       className={`relative flex-1 py-2 px-3 rounded-[10px] text-center transition-all duration-200 ${
-        isActive ? "text-white font-medium" : "text-white/60 font-normal"
+        isActive ? "text-white font-bold" : "text-white/60 font-normal"
       }`}
     >
       {isActive && (
         <motion.div
-          className="absolute inset-0 bg-white/10 rounded-[10px]"
+          className="absolute inset-0 bg-white/25 rounded-[10px]"
           layoutId="activeTab"
           initial={false}
           transition={{
             type: "spring",
             stiffness: 400,
             damping: 30
+          }}
+          style={{
+            boxShadow: "0 0 12px rgba(255, 255, 255, 0.25)"
           }}
         />
       )}

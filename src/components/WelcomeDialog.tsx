@@ -139,7 +139,7 @@ export function WelcomeDialog({ open, onOpenChange }: WelcomeDialogProps) {
           </div>
           
           <div className="space-y-1">
-            <p><span className="font-medium">Pro Tip:</span> Try Heavy Rain + Thunder + Rain Windshield for deep focus! 💫</p>
+            <p><span className="font-medium">My Favorite:</span> Try Late Night Storm 💫</p>
           </div>
           
           <div className="pt-3 border-t border-white/20 space-y-1">
