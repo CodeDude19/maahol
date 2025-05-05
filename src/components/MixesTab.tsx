@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAudioState } from "@/contexts/AudioStateContext";
 import { motion } from "framer-motion";
 import { sounds } from "@/data/sounds";
@@ -48,14 +48,38 @@ const MixesTab: React.FC = () => {
     });
   };
 
+  // Sort mixes to bring active ones to the top
+  const sortedPredefinedMixes = useMemo(() => {
+    return [...soundMixes].sort((a, b) => {
+      const isActiveA = isMixActive(a);
+      const isActiveB = isMixActive(b);
+      
+      if (isActiveA && !isActiveB) return -1;
+      if (!isActiveA && isActiveB) return 1;
+      return 0;
+    });
+  }, [getActiveSounds]);
+
+  // Sort custom mixes to bring active ones to the top
+  const sortedCustomMixes = useMemo(() => {
+    return [...customMixes].sort((a, b) => {
+      const isActiveA = isMixActive(a);
+      const isActiveB = isMixActive(b);
+      
+      if (isActiveA && !isActiveB) return -1;
+      if (!isActiveA && isActiveB) return 1;
+      return 0;
+    });
+  }, [customMixes, getActiveSounds]);
+
   return (
     <div className={`flex flex-col gap-4 py-1 pb-24 ${isMobile ? 'px-4' : 'max-w-[650px] mx-auto px-4'}`}>
       {/* Predefined Mixes Section */}
-      {soundMixes.length > 0 && (
+      {sortedPredefinedMixes.length > 0 && (
         <div className="mb-2">
-          <h3 className="text-white/80 text-sm font-medium mb-3 px-1"></h3>
+          <h3 className="text-white/80 text-sm font-medium mb-4 px-1"></h3>
           <div className="flex flex-col gap-4">
-            {soundMixes.map((mix, index) => {
+            {sortedPredefinedMixes.map((mix, index) => {
               const isActive = isMixActive(mix);
               
               return (
@@ -138,11 +162,11 @@ const MixesTab: React.FC = () => {
       )}
       
       {/* Custom Mixes Section */}
-      {customMixes.length > 0 && (
+      {sortedCustomMixes.length > 0 && (
         <div className="mt-4">
           <h3 className="text-white/80 text-sm font-medium mb-3 px-1">Your Custom Mixes</h3>
           <div className="flex flex-col gap-4">
-            {customMixes.map((mix, index) => {
+            {sortedCustomMixes.map((mix, index) => {
               const isActive = isMixActive(mix);
               
               return (
@@ -232,7 +256,7 @@ const MixesTab: React.FC = () => {
       )}
       
       {/* No mixes message */}
-      {customMixes.length === 0 && (
+      {sortedCustomMixes.length === 0 && (
         <div className="mt-4 text-center text-white/60 text-sm">
           You haven't saved any custom mixes yet.
         </div>
