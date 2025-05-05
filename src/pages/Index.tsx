@@ -53,7 +53,7 @@ const IndexContent = () => {
       
       <TabBar activeTab={activeTab} onTabChange={handleTabChange} />
       
-      <main className="flex-grow px-2 sm:px-4 mb-6 pt-1 overflow-y-auto relative">
+      <main className="flex-grow px-2 sm:px-4 mb-6 overflow-y-auto relative">
         <AnimatePresence>
           {activeSounds.length > 0 && (
             <motion.div 

@@ -53,7 +53,7 @@ const MixesTab: React.FC = () => {
       {/* Predefined Mixes Section */}
       {soundMixes.length > 0 && (
         <div className="mb-2">
-          <h3 className="text-white/80 text-sm font-medium mb-3 px-1">Best of Maahols</h3>
+          <h3 className="text-white/80 text-sm font-medium mb-3 px-1"></h3>
           <div className="flex flex-col gap-4">
             {soundMixes.map((mix, index) => {
               const isActive = isMixActive(mix);

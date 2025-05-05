@@ -13,7 +13,7 @@ const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="sticky top-[74px] z-30 w-full px-4 pb-2 pt-1">
+    <div className="sticky top-[78px] z-30 w-full px-4 pb-[4.5rem] pt-1">
       <div className={`mx-auto ${!isMobile ? 'max-w-[650px]' : ''}`}>
         <motion.div 
           className="py-1.5 px-2 rounded-[12px] backdrop-blur-lg bg-white/20 w-full"
@@ -28,12 +28,12 @@ const TabBar: React.FC<TabBarProps> = ({ activeTab, onTabChange }) => {
             <TabButton 
               isActive={activeTab === "discover"} 
               onClick={() => onTabChange("discover")}
-              label="Discover"
+              label="Create"
             />
             <TabButton 
               isActive={activeTab === "mixes"} 
               onClick={() => onTabChange("mixes")}
-              label="Mixes"
+              label="Magic Mixes"
             />
           </div>
         </motion.div>
