@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <motion.div 
-      className={`bg-white/20 backdrop-blur-lg border-t border-white/20 p-4 sm:p-5 mb-2.5 rounded-[10px] ${!isMobile ? 'max-w-[650px] mx-auto' : 'mx-2.5'}`}
+      className={`bg-white/20 backdrop-blur-lg border-t border-white/20 p-3 mb-2.5 rounded-[10px] ${!isMobile ? 'max-w-[650px] mx-auto' : 'mx-2.5'}`}
       style={{
         boxShadow: "0 -8px 32px -8px rgba(255, 255, 255, 0.1), 0 0 20px 0px rgba(255, 255, 255, 0.15)"
       }}
@@ -90,11 +90,11 @@ const Dashboard: React.FC = () => {
       <div className="w-full">
         <div className="grid grid-cols-[70%_30%] gap-4">
           {/* Left column - Volume controls (70%) */}
-          <div className="py-2 flex flex-col justify-between h-full">
+          <div className="py-1 flex flex-col justify-between h-full">
             {activeSounds.length > 0 ? (
-              <div className="flex flex-col justify-between h-full" style={{ minHeight: activeSounds.length * 40 + 'px' }}>
+              <div className="flex flex-col justify-between h-full" style={{ minHeight: activeSounds.length * 32 + 'px' }}>
                 {activeSounds.map((sound) => (
-                  <div key={sound.id} className="py-1">
+                  <div key={sound.id} className="py-0.5">
                     <VolumeSlider sound={sound} />
                   </div>
                 ))}
@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
           </div>
           
           {/* Right column - Play/Pause and Save Mix buttons (30%) */}
-          <div className="flex flex-col items-center justify-center py-3 px-2 h-full space-y-4">
+          <div className="flex flex-col items-center justify-center py-1 px-2 h-full space-y-3">
             <div className="relative">
               <CircleWave isPlaying={isPlaying} />
               {isPlaying && particles.map((delay, index) => (
